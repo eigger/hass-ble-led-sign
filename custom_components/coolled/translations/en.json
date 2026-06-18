@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select a discovered CoolLED BLE sign nearby.",
+        "data": {
+          "address": "Device"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "Do you want to set up CoolLED BLE sign {name}?"
+      }
+    },
+    "abort": {
+      "not_supported": "This device is not supported.",
+      "no_devices_found": "No CoolLED devices found."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CoolLED Options",
+        "description": "Adjust BLE communication settings.",
+        "data": {
+          "password": "Device Password",
+          "retry_count": "Retry Count",
+          "write_delay_ms": "Packet Delay (ms)"
+        },
+        "data_description": {
+          "password": "6-digit password for protected devices (default 000000).",
+          "retry_count": "Number of retries before reporting failure.",
+          "write_delay_ms": "Delay between BLE packets (default 15 ms)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "display": { "name": "Display Power" }
+    },
+    "number": {
+      "speed": { "name": "Scroll Speed" }
+    },
+    "select": {
+      "mode": { "name": "Scroll Mode" }
+    },
+    "text": {
+      "display_text": { "name": "Scroll Text" }
+    },
+    "image": {
+      "last_updated_content": { "name": "Last Sent Display" },
+      "preview_content": { "name": "Render Preview" }
+    }
+  },
+  "services": {
+    "write": {
+      "name": "Write Display",
+      "description": "Render a display image from payload elements and send it to the CoolLED sign.",
+      "fields": {
+        "payload": {
+          "name": "Payload",
+          "description": "Drawing elements. Colors depend on device type: single (off/on), seven (7 colors), colorful (RGB)."
+        },
+        "rotate": { "name": "Rotate", "description": "Display rotation in degrees (0, 90, 180, 270)." },
+        "background": {
+          "name": "Background",
+          "description": "Background color. Unsupported colors map to the nearest supported color."
+        },
+        "threshold": {
+          "name": "Threshold",
+          "description": "Luminance threshold for single-color draw bitmap encoding."
+        },
+        "invert": {
+          "name": "Invert",
+          "description": "For single-color devices: when false, brighter pixels are lit (default)."
+        },
+        "dry_run": { "name": "Dry Run", "description": "Render preview only without sending to the device." }
+      }
+    },
+    "send_text": {
+      "name": "Send Text",
+      "description": "Send scrolling text to a CoolLED sign.",
+      "fields": {
+        "text": { "name": "Text", "description": "Text to display on the sign." },
+        "color": { "name": "Color", "description": "Text color name (mapped to the device palette)." }
+      }
+    },
+    "send_image": {
+      "name": "Send Image",
+      "description": "Send a bitmap image file to a CoolLED sign.",
+      "fields": {
+        "image_path": { "name": "Image Path", "description": "Local image file path." },
+        "threshold": { "name": "Threshold", "description": "Luminance threshold for single-color bitmap encoding." },
+        "invert": { "name": "Invert", "description": "For single-color devices: when false, brighter pixels are lit." }
+      }
+    },
+    "send_animation": {
+      "name": "Send Animation",
+      "description": "Send an animated GIF to a CoolLED sign.",
+      "fields": {
+        "image_path": { "name": "Animation Path", "description": "Local animated GIF file path." },
+        "speed_ms": { "name": "Frame Speed", "description": "Milliseconds between frames. Defaults to the GIF frame delay." },
+        "threshold": { "name": "Threshold", "description": "Luminance threshold for single-color bitmap encoding." },
+        "invert": { "name": "Invert", "description": "For single-color devices: when false, brighter pixels are lit." }
+      }
+    },
+    "send_jt": {
+      "name": "Send JT Program",
+      "description": "Send a CoolLED JT program file (graffiti or animation).",
+      "fields": {
+        "jt_path": { "name": "JT File Path", "description": "Local JT program file path." }
+      }
+    },
+    "set_icon": {
+      "name": "Set Built-in Icon",
+      "description": "Show a built-in icon by ID on the CoolLED sign.",
+      "fields": {
+        "icon_id": { "name": "Icon ID", "description": "Built-in icon identifier (0–255)." }
+      }
+    },
+    "set_music": {
+      "name": "Set Music Bars",
+      "description": "Show an 8-bar music equalizer pattern on the sign.",
+      "fields": {
+        "heights": { "name": "Bar Heights", "description": "Eight bar height values (0–255)." },
+        "colors": { "name": "Bar Colors", "description": "Eight bar color indices (typically 0–7)." }
+      }
+    }
+  }
+}
