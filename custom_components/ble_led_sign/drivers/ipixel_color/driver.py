@@ -60,6 +60,9 @@ class IpixelColorDriver(BaseLedDriver):
     supports_music = False
     supports_jt = False
 
+    # Panel size/colour come from a device-info query, not the advertisement.
+    requires_active_info = True
+
     @classmethod
     def match(cls, service_info: BluetoothServiceInfoBleak) -> bool:
         return is_supported(service_info)
@@ -67,6 +70,11 @@ class IpixelColorDriver(BaseLedDriver):
     @classmethod
     def parse(cls, service_info: BluetoothServiceInfoBleak) -> DeviceEntry:
         return parse_scan_record(service_info)
+
+    async def async_fetch_info(
+        self, ble_device: BLEDevice, device: DeviceEntry, write_delay_ms: int = 0
+    ) -> bool:
+        return await writer.fetch_device_info(ble_device, device, write_delay_ms)
 
     async def send_command(
         self,

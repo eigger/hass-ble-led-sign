@@ -6,6 +6,7 @@ from datetime import datetime
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
+from ...const import COLOR_TYPE_COLORFUL
 from ..base import DeviceEntry
 from .const import DEVICE_NAME_PREFIXES, MANUFACTURER, MATCH_SERVICE_UUIDS
 
@@ -74,12 +75,17 @@ def parse_scan_record(service_info: BluetoothServiceInfoBleak) -> DeviceEntry:
     """Build a :class:`DeviceEntry` from an advertisement.
 
     The advertisement does not carry the panel resolution; it is read live from
-    a device-info query when content is sent (see :func:`parse_device_info`).
+    a device-info query (see :func:`parse_device_info`) and written back onto
+    this entry. ``rows``/``columns`` stay at 0 until that query completes so a
+    stale default size is never shown. iPixel panels are full-colour.
     """
     return DeviceEntry(
         name=service_info.name or "iPixel Color",
         driver_id="ipixel_color",
         manufacturer=MANUFACTURER,
+        rows=0,
+        columns=0,
+        color_type=COLOR_TYPE_COLORFUL,
     )
 
 

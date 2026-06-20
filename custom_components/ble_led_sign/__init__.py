@@ -78,6 +78,26 @@ def process_service_info(
     entry.runtime_data.device_data.update(service_info)
     sync_device_registry(hass, entry, service_info)
 
+    # For families whose size/colour isn't advertised, query it once over a
+    # connection as soon as the device is seen (in case it wasn't reachable at
+    # setup time).
+    runtime = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not runtime:
+        return
+    driver = runtime.get("driver")
+    device = runtime["data"].device
+    if (
+        driver is not None
+        and getattr(driver, "requires_active_info", False)
+        and device is not None
+        and not device.columns
+        and not runtime.get("info_fetching")
+    ):
+        runtime["info_fetching"] = True
+        entry.async_create_background_task(
+            hass, _async_fetch_device_info(hass, entry), f"{DOMAIN}_fetch_info"
+        )
+
 
 def _resolve_driver(
     entry: BleLedSignConfigEntry, data: BleLedSignBluetoothDeviceData
@@ -183,7 +203,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(bt_coordinator.async_start())
+
+    # Some families (e.g. iPixel Color) don't advertise their panel size; read
+    # it over a connection in the background and refresh the device registry.
+    if driver is not None and getattr(driver, "requires_active_info", False):
+        hass.data[DOMAIN][entry.entry_id]["info_fetching"] = True
+        entry.async_create_background_task(
+            hass, _async_fetch_device_info(hass, entry), f"{DOMAIN}_fetch_info"
+        )
+
     return True
+
+
+async def _async_fetch_device_info(
+    hass: HomeAssistant, entry: BleLedSignConfigEntry
+) -> None:
+    """Read panel metadata over a connection and update the device registry."""
+    runtime = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not runtime:
+        return
+    driver = runtime.get("driver")
+    data: BleLedSignBluetoothDeviceData = runtime["data"]
+    try:
+        if driver is None or data.device is None:
+            return
+        ble_device = async_ble_device_from_address(hass, runtime["address"])
+        if ble_device is None:
+            return
+        async with hass.data[DOMAIN][LOCK]:
+            ok = await driver.async_fetch_info(ble_device, data.device)
+        if ok and data.last_service_info is not None:
+            sync_device_registry(hass, entry, data.last_service_info)
+    finally:
+        # Allow a later advertisement to retry if the size is still unknown.
+        runtime["info_fetching"] = False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -> bool:
@@ -266,14 +319,15 @@ async def _write_label_to_device(
     runtime = hass.data[DOMAIN][entry_id]
     device = runtime["data"].device
     assert device is not None
-    _ = image_to_draw_bytes(
-        image,
-        device.columns,
-        device.rows,
-        threshold=threshold,
-        invert=invert,
-        color_type=device.color_type,
-    )
+    if device.columns and device.rows:
+        _ = image_to_draw_bytes(
+            image,
+            device.columns,
+            device.rows,
+            threshold=threshold,
+            invert=invert,
+            color_type=device.color_type,
+        )
 
     if dry_run:
         return
@@ -368,14 +422,15 @@ async def _send_image_to_device(
     if device is None:
         raise HomeAssistantError("Device metadata is not ready yet")
 
-    _ = image_to_draw_bytes(
-        image,
-        device.columns,
-        device.rows,
-        threshold=threshold,
-        invert=invert,
-        color_type=device.color_type,
-    )
+    if device.columns and device.rows:
+        _ = image_to_draw_bytes(
+            image,
+            device.columns,
+            device.rows,
+            threshold=threshold,
+            invert=invert,
+            color_type=device.color_type,
+        )
 
     save_slot = int(service.data.get("save_slot", 0))
 

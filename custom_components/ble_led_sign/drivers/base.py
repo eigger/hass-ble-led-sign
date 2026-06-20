@@ -113,6 +113,16 @@ class BaseLedDriver(ABC):
     def parse(cls, service_info: BluetoothServiceInfoBleak) -> DeviceEntry:
         """Build a :class:`DeviceEntry` from a matching advertisement."""
 
+    #: True if the panel size/capabilities must be read via an active
+    #: connection (the advertisement does not carry them).
+    requires_active_info: bool = False
+
+    async def async_fetch_info(
+        self, ble_device: BLEDevice, device: DeviceEntry, write_delay_ms: int = 0
+    ) -> bool:
+        """Query device metadata over a connection and update ``device`` in place."""
+        return False
+
     # --- operations -----------------------------------------------------
     # Default implementations raise NotImplementedError; drivers override the
     # operations they actually support (and flip the matching capability flag).
