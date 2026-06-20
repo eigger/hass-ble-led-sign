@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -198,12 +198,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) 
 
 
 def _normalize_device_ids(service: ServiceCall) -> list[str]:
-    if service.target and service.target.device_id:
-        device_ids = service.target.device_id
-        if isinstance(device_ids, str):
-            return [device_ids]
-        return list(device_ids)
-    device_ids = service.data.get("device_id")
+    # Home Assistant merges the service ``target`` (device_id/entity_id/area_id)
+    # into ``service.data``; ServiceCall has no ``target`` attribute.
+    device_ids = service.data.get(ATTR_DEVICE_ID)
     if isinstance(device_ids, str):
         return [device_ids]
     if device_ids:
