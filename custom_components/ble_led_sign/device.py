@@ -61,7 +61,8 @@ def sync_device_registry(
     }
 
     if device:
-        kwargs["model"] = f"{device.rows}×{device.columns}"
+        if device.rows and device.columns:
+            kwargs["model"] = f"{device.rows}×{device.columns}"
         if device.device_id:
             kwargs["serial_number"] = device.device_id
         if device.version:

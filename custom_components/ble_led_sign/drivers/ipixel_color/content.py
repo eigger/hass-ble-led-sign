@@ -86,12 +86,31 @@ def char_height_for(panel_height: int) -> int:
     return 16 if panel_height <= 20 else 32
 
 
-def _load_font(char_height: int, font_path: str | None) -> ImageFont.FreeTypeFont:
-    if font_path:
-        return ImageFont.truetype(font_path, char_height)
-    if char_height >= 32:
-        return ImageFont.truetype(str(_FONT_LARGE), 28)
-    return ImageFont.truetype(str(_FONT_SMALL), 11)
+def _render_text_row(text: str, char_height: int, font_path: str | None) -> Image.Image:
+    """Render text and scale the inked area to exactly ``char_height`` rows.
+
+    Scaling the glyphs to fill the full row height is what keeps Hangul legible
+    (a syllable needs the whole 16/32-pixel column, not a partial height).
+    """
+    path = font_path or str(_FONT_SMALL if char_height <= 16 else _FONT_LARGE)
+    font = ImageFont.truetype(path, char_height * 3)  # oversample for quality
+
+    measure = ImageDraw.Draw(Image.new("L", (4, 4)))
+    left, top, right, bottom = measure.textbbox((0, 0), text, font=font)
+    width = max(1, right - left)
+    height = max(1, bottom - top)
+    big = Image.new("L", (width, height), 0)
+    ImageDraw.Draw(big).text((-left, -top), text, fill=255, font=font)
+
+    ink = big.getbbox()
+    if ink:
+        big = big.crop(ink)
+    if big.height == 0 or big.width == 0:
+        return Image.new("L", (1, char_height), 0)
+
+    new_w = max(1, round(big.width * char_height / big.height))
+    row = big.resize((new_w, char_height), Image.Resampling.LANCZOS)
+    return row.point(lambda p: 255 if p > PIXEL_THRESHOLD else 0, mode="L")
 
 
 def _encode_chunk_img(img: Image.Image) -> bytes:
@@ -151,20 +170,11 @@ def encode_text_payload(
     Scrolling and other effects are applied by the device through the
     ``animation`` byte; the client only ships the glyph bitmaps.
     """
-    font = _load_font(char_height, font_path)
     chunk_width = 8 if char_height <= 20 else 16
     block_type = 0x02 if char_height == 32 else 0x00
     color_bytes = bytes(color)
 
-    # Render the whole string to a 1-bit bitmap of the row height.
-    measure = ImageDraw.Draw(Image.new("L", (4, char_height)))
-    left, top, right, bottom = measure.textbbox((0, 0), text, font=font)
-    text_w = max(1, right - left)
-    img = Image.new("L", (text_w + 4, char_height), 0)
-    draw = ImageDraw.Draw(img)
-    y = (char_height - (bottom - top)) // 2 - top
-    draw.text((-left, y), text, fill=255, font=font)
-    img = img.point(lambda p: 255 if p > PIXEL_THRESHOLD else 0, mode="L")
+    img = _render_text_row(text, char_height, font_path)
 
     blocks = bytearray()
     count = 0

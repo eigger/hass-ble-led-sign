@@ -18,6 +18,7 @@ from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 from PIL import Image
 
+from ...const import COLOR_TYPE_COLORFUL
 from ..base import DeviceEntry
 from .commands import (
     cmd_brightness,
@@ -238,6 +239,25 @@ async def _with_client(ble_device: BLEDevice, device: DeviceEntry, action) -> bo
                 pass
 
 
+def _apply_dimensions(device: DeviceEntry, width: int, height: int) -> None:
+    """Write the queried panel size/colour back onto the shared device entry."""
+    device.columns = width
+    device.rows = height
+    device.color_type = COLOR_TYPE_COLORFUL
+
+
+async def fetch_device_info(
+    ble_device: BLEDevice, device: DeviceEntry, write_delay_ms: int = 0
+) -> bool:
+    """Query the panel size/colour and store it on the device entry."""
+
+    async def _action(client: IpixelColorClient) -> None:
+        width, height = await client.query_dimensions()
+        _apply_dimensions(device, width, height)
+
+    return await _with_client(ble_device, device, _action)
+
+
 async def send_command(
     ble_device: BLEDevice,
     device: DeviceEntry,
@@ -268,6 +288,7 @@ async def send_file(
     async def _action(client: IpixelColorClient) -> None:
         client.write_delay_ms = write_delay_ms
         width, height = await client.query_dimensions()
+        _apply_dimensions(device, width, height)
         resized = resize_image_bytes(file_bytes, is_gif, width, height)
         await client.send_windows(build_content_windows(resized, is_gif, save_slot))
 
@@ -322,7 +343,8 @@ async def send_text(
 
     async def _action(client: IpixelColorClient) -> None:
         client.write_delay_ms = write_delay_ms
-        _, height = await client.query_dimensions()
+        width, height = await client.query_dimensions()
+        _apply_dimensions(device, width, height)
         payload = encode_text_payload(
             text,
             char_height_for(height),

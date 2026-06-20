@@ -54,5 +54,5 @@
     "pyStrich==0.9",
     "requests>=2.31.0"
   ],
-  "version": "2.0.0"
+  "version": "2.0.1"
 }
