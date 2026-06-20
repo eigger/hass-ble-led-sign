@@ -1,5 +1,5 @@
 {
-  "name": "CoolLED BLE Sign",
+  "name": "BLE LED Sign",
   "render_readme": true,
   "homeassistant": "2025.1.0"
 }

@@ -1,0 +1,278 @@
+write:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    payload:
+      required: true
+      example: |
+        - type: text
+          value: Hello HA
+          x: 2
+          y: 1
+          size: 10
+          color: white
+      default:
+        - type: text
+          value: Hello HA
+          x: 2
+          y: 1
+          size: 10
+          color: white
+      selector:
+        object:
+    rotate:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 270
+          step: 90
+    background:
+      required: false
+      example: black
+      selector:
+        select:
+          options:
+            - "black"
+            - "off"
+            - "white"
+            - "on"
+            - "red"
+            - "yellow"
+            - "green"
+            - "cyan"
+            - "blue"
+            - "purple"
+            - "orange"
+            - "pink"
+    threshold:
+      required: false
+      example: 128
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+    invert:
+      required: false
+      example: false
+      selector:
+        boolean:
+    dry_run:
+      required: false
+      example: false
+      selector:
+        boolean:
+
+send_text:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    text:
+      required: true
+      example: Hello Home Assistant
+      selector:
+        text:
+    color:
+      required: false
+      example: white
+      selector:
+        text:
+    animation:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 7
+          step: 1
+    speed:
+      required: false
+      example: 80
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+    rainbow:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 9
+          step: 1
+    bg_color:
+      required: false
+      example: "000000"
+      selector:
+        text:
+    font:
+      required: false
+      example: /config/www/myfont.ttf
+      selector:
+        text:
+    save_slot:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1
+
+send_image:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    image_path:
+      required: true
+      example: /config/www/led_sign.png
+      selector:
+        text:
+    threshold:
+      required: false
+      example: 128
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+    invert:
+      required: false
+      example: false
+      selector:
+        boolean:
+    save_slot:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1
+
+send_animation:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    image_path:
+      required: true
+      example: /config/www/led_sign.gif
+      selector:
+        text:
+    speed_ms:
+      required: false
+      example: 500
+      selector:
+        number:
+          min: 50
+          max: 5000
+          step: 10
+          unit_of_measurement: ms
+    threshold:
+      required: false
+      example: 128
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+    invert:
+      required: false
+      example: false
+      selector:
+        boolean:
+    save_slot:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1
+
+send_jt:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    jt_path:
+      required: true
+      example: /config/www/sign.jt
+      selector:
+        text:
+
+set_icon:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    icon_id:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+
+set_music:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    heights:
+      required: true
+      example: [4, 8, 12, 16, 12, 8, 4, 2]
+      selector:
+        object:
+    colors:
+      required: true
+      example: [1, 2, 3, 4, 3, 2, 1, 1]
+      selector:
+        object:
+
+send_command:
+  target:
+    device:
+      integration: ble_led_sign
+  fields:
+    command:
+      required: true
+      example: clock
+      selector:
+        select:
+          options:
+            - turn_on
+            - turn_off
+            - brightness
+            - speed
+            - flip
+            - clear
+            - exit
+            - diy_mode
+            - clock
+            - week
+            - sport
+            - countdown
+            - chronograph
+            - scoreboard
+            - rhythm
+            - eq
+            - password_set
+            - password_verify
+            - set_time
+            - show_slot
+            - delete_slot
+          custom_value: true
+    value:
+      required: false
+      example: [1, true, false]
+      selector:
+        object:
