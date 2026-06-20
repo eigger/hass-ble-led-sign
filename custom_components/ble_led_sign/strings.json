@@ -1,0 +1,239 @@
+{
+  "services": {
+    "write": {
+      "name": "Write Display",
+      "description": "Render a display image from payload elements and send it to the BLE LED sign.",
+      "fields": {
+        "payload": {
+          "name": "Payload",
+          "description": "Drawing elements (text, line, icon, qrcode, …). Colors depend on device type: single (off/on), seven (7 colors), colorful (RGB)."
+        },
+        "rotate": {
+          "name": "Rotate",
+          "description": "Display rotation in degrees (0, 90, 180, 270)."
+        },
+        "background": {
+          "name": "Background",
+          "description": "Background color. Unsupported colors are mapped to the nearest color for the device."
+        },
+        "threshold": {
+          "name": "Threshold",
+          "description": "Luminance threshold for single-color devices when encoding the draw bitmap."
+        },
+        "invert": {
+          "name": "Invert",
+          "description": "For single-color devices: when false, brighter pixels are lit (default)."
+        },
+        "dry_run": {
+          "name": "Dry Run",
+          "description": "Generate preview image without sending to device."
+        }
+      }
+    },
+    "send_text": {
+      "name": "Send Text",
+      "description": "Send scrolling text to a BLE LED sign.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Text to display on the sign.",
+          "required": true
+        },
+        "color": {
+          "name": "Color",
+          "description": "Text color: a name or hex like ff0000 (full-color drivers) or palette name (CoolLED)."
+        },
+        "animation": {
+          "name": "Animation",
+          "description": "Animation/scroll mode (driver-specific, e.g. iPixel 0-7; 0 = static)."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Animation speed 0-100 (iPixel)."
+        },
+        "rainbow": {
+          "name": "Rainbow",
+          "description": "Rainbow color mode 0-9 (iPixel)."
+        },
+        "bg_color": {
+          "name": "Background Color",
+          "description": "Background color hex like 000000 (iPixel). Omit for none."
+        },
+        "font": {
+          "name": "Font",
+          "description": "Path to a .ttf font file (iPixel). Defaults to the bundled Galmuri pixel font."
+        },
+        "save_slot": {
+          "name": "Save Slot",
+          "description": "Store in device slot 1-10 (iPixel). 0 = display now without saving."
+        }
+      }
+    },
+    "send_image": {
+      "name": "Send Image",
+      "description": "Send a bitmap image file to a BLE LED sign.",
+      "fields": {
+        "image_path": {
+          "name": "Image Path",
+          "description": "Local image file path to render on the sign.",
+          "required": true
+        },
+        "threshold": {
+          "name": "Threshold",
+          "description": "Luminance threshold for single-color bitmap encoding."
+        },
+        "invert": {
+          "name": "Invert",
+          "description": "For single-color devices: when false, brighter pixels are lit."
+        },
+        "save_slot": {
+          "name": "Save Slot",
+          "description": "Store in device slot 1-10 (iPixel). 0 = display now without saving."
+        }
+      }
+    },
+    "send_animation": {
+      "name": "Send Animation",
+      "description": "Send an animated GIF to a BLE LED sign.",
+      "fields": {
+        "image_path": {
+          "name": "Animation Path",
+          "description": "Local animated GIF file path.",
+          "required": true
+        },
+        "speed_ms": {
+          "name": "Frame Speed",
+          "description": "Milliseconds between frames. Defaults to the GIF frame delay."
+        },
+        "threshold": {
+          "name": "Threshold",
+          "description": "Luminance threshold for single-color bitmap encoding."
+        },
+        "invert": {
+          "name": "Invert",
+          "description": "For single-color devices: when false, brighter pixels are lit."
+        },
+        "save_slot": {
+          "name": "Save Slot",
+          "description": "Store in device slot 1-10 (iPixel). 0 = display now without saving."
+        }
+      }
+    },
+    "send_jt": {
+      "name": "Send JT Program",
+      "description": "Send a CoolLED JT program file (graffiti or animation).",
+      "fields": {
+        "jt_path": {
+          "name": "JT File Path",
+          "description": "Local JT program file path.",
+          "required": true
+        }
+      }
+    },
+    "set_icon": {
+      "name": "Set Built-in Icon",
+      "description": "Show a built-in icon by ID on the BLE LED sign.",
+      "fields": {
+        "icon_id": {
+          "name": "Icon ID",
+          "description": "Built-in icon identifier (0–255).",
+          "required": true
+        }
+      }
+    },
+    "set_music": {
+      "name": "Set Music Bars",
+      "description": "Show an 8-bar music equalizer pattern on the sign.",
+      "fields": {
+        "heights": {
+          "name": "Bar Heights",
+          "description": "Eight bar height values (0–255).",
+          "required": true
+        },
+        "colors": {
+          "name": "Bar Colors",
+          "description": "Eight bar color indices (device-specific, typically 0–7).",
+          "required": true
+        }
+      }
+    },
+    "send_command": {
+      "name": "Send Control Command",
+      "description": "Send a low-level control command to a driver that supports it (e.g. iPixel Color: clock, scoreboard, countdown, DIY mode).",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command name (e.g. clock, scoreboard, countdown, diy_mode, sport, eq).",
+          "required": true
+        },
+        "value": {
+          "name": "Value",
+          "description": "Optional argument(s): a single number, or a list for multi-argument commands (e.g. scoreboard: [3, 1]; clock: [mode, time_scale, show_date]).",
+          "required": false
+        }
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "display": { "name": "Display Power" }
+    },
+    "number": {
+      "speed": { "name": "Scroll Speed" }
+    },
+    "select": {
+      "mode": { "name": "Scroll Mode" }
+    },
+    "switch": {
+      "flip": { "name": "Flip Display" }
+    },
+    "button": {
+      "clear": { "name": "Clear Display" }
+    },
+    "text": {
+      "display_text": { "name": "Scroll Text" }
+    },
+    "image": {
+      "last_updated_content": { "name": "Last Sent Display" },
+      "preview_content": { "name": "Render Preview" }
+    }
+  },
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "abort": {
+      "not_supported": "This device is not supported.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "BLE LED Sign Options",
+        "description": "Adjust BLE communication settings.",
+        "data": {
+          "password": "Device Password",
+          "retry_count": "Retry Count",
+          "write_delay_ms": "Packet Delay (ms)"
+        },
+        "data_description": {
+          "password": "6-digit password for protected devices (default 000000).",
+          "retry_count": "Number of retries before reporting failure.",
+          "write_delay_ms": "Delay between BLE packets (default 15 ms)."
+        }
+      }
+    }
+  }
+}
