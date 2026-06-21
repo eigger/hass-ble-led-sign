@@ -179,16 +179,27 @@
       "display": { "name": "Display Power" }
     },
     "number": {
-      "speed": { "name": "Scroll Speed" }
+      "speed": { "name": "Scroll Speed" },
+      "countdown_minutes": { "name": "Countdown Minutes" }
     },
     "select": {
-      "mode": { "name": "Scroll Mode" }
+      "mode": { "name": "Scroll Mode" },
+      "display_mode": {
+        "name": "Display Mode",
+        "state": {
+          "normal": "Normal",
+          "clock": "Clock",
+          "stopwatch": "Stopwatch",
+          "scoreboard": "Scoreboard"
+        }
+      }
     },
     "switch": {
       "flip": { "name": "Flip Display" }
     },
     "button": {
-      "clear": { "name": "Clear Display" }
+      "clear": { "name": "Clear Display" },
+      "start_countdown": { "name": "Start Countdown" }
     },
     "text": {
       "display_text": { "name": "Scroll Text" }

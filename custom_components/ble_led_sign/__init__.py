@@ -138,6 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
         "address": address,
         "data": data,
         "driver": driver,
+        "countdown_minutes": 5,
         "image_coordinator": DataUpdateCoordinator(hass, _LOGGER, name=f"{DOMAIN}_image"),
         "preview_coordinator": DataUpdateCoordinator(hass, _LOGGER, name=f"{DOMAIN}_preview"),
     }

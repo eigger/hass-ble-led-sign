@@ -32,6 +32,14 @@ class IpixelColorDriver(BaseLedDriver):
     supports_speed = True  # mapped to the device's text-speed command
     supports_flip = True
     supports_clear = True
+    supports_countdown = True
+    # Built-in display modes for the "Display Mode" select.
+    display_modes = {
+        "normal": ("exit", None),
+        "clock": ("clock", [1, True, True]),
+        "stopwatch": ("chronograph", 1),
+        "scoreboard": ("scoreboard", [0, 0]),
+    }
     # Extra parameterised commands reachable via the send_command service.
     extra_commands = (
         "diy_mode",

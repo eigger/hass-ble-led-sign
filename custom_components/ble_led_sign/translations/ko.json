@@ -39,16 +39,27 @@
       "display": { "name": "디스플레이 전원" }
     },
     "number": {
-      "speed": { "name": "스크롤 속도" }
+      "speed": { "name": "스크롤 속도" },
+      "countdown_minutes": { "name": "카운트다운 (분)" }
     },
     "select": {
-      "mode": { "name": "스크롤 모드" }
+      "mode": { "name": "스크롤 모드" },
+      "display_mode": {
+        "name": "디스플레이 모드",
+        "state": {
+          "normal": "일반",
+          "clock": "시계",
+          "stopwatch": "스톱워치",
+          "scoreboard": "점수판"
+        }
+      }
     },
     "switch": {
       "flip": { "name": "화면 상하반전" }
     },
     "button": {
-      "clear": { "name": "화면 지우기" }
+      "clear": { "name": "화면 지우기" },
+      "start_countdown": { "name": "카운트다운 시작" }
     },
     "text": {
       "display_text": { "name": "스크롤 텍스트" }
