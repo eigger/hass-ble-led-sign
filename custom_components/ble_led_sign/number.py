@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -36,9 +37,59 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    if not driver_supports(hass, entry.entry_id, "supports_speed"):
-        return
-    async_add_entities([BleLedSignSpeedNumber(hass, entry)])
+    entities: list[NumberEntity] = []
+    if driver_supports(hass, entry.entry_id, "supports_speed"):
+        entities.append(BleLedSignSpeedNumber(hass, entry))
+    if driver_supports(hass, entry.entry_id, "supports_countdown"):
+        entities.append(BleLedSignCountdownMinutesNumber(hass, entry))
+    async_add_entities(entities)
+
+
+class BleLedSignCountdownMinutesNumber(RestoreEntity, NumberEntity):
+    """Countdown duration in minutes (used by the Start Countdown button)."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "countdown_minutes"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_mode = NumberMode.BOX
+    _attr_native_min_value = 0
+    _attr_native_max_value = 99
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "min"
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        address = hass.data[DOMAIN][entry.entry_id]["address"]
+        self._hass = hass
+        self._entry_id = entry.entry_id
+        self._address = address
+        self._identifier = address.replace(":", "")[-8:].upper()
+        self._attr_unique_id = f"ble_led_sign_{self._identifier}_countdown_minutes"
+        self._attr_native_value = hass.data[DOMAIN][entry.entry_id]["countdown_minutes"]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return build_device_info(self._address)
+
+    @cached_property
+    def available(self) -> bool:
+        return True
+
+    async def async_set_native_value(self, value: float) -> None:
+        minutes = int(value)
+        self._hass.data[DOMAIN][self._entry_id]["countdown_minutes"] = minutes
+        self._attr_native_value = minutes
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is None:
+            return
+        try:
+            minutes = int(float(last_state.state))
+        except (TypeError, ValueError):
+            return
+        self._attr_native_value = minutes
+        self._hass.data[DOMAIN][self._entry_id]["countdown_minutes"] = minutes
 
 
 class BleLedSignSpeedNumber(RestoreEntity, NumberEntity):

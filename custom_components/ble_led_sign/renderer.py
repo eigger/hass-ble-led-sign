@@ -65,6 +65,12 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont, line_length: int):
 def should_show_element(element):
     return element['visible'] if 'visible' in element else True
 
+#: Bundled fallback font (Korean + Latin) used when a requested font is absent.
+_FALLBACK_FONT = os.path.join(
+    os.path.dirname(__file__), "fonts", "galmuri", "Galmuri14.ttf"
+)
+
+
 def get_font_file(font_name, hass):
     font_file = os.path.join(os.path.dirname(__file__), font_name)
     _LOGGER.debug(f"Font => font_name: {font_name} first checking for default font_file: {font_file}")
@@ -75,6 +81,9 @@ def get_font_file(font_name, hass):
             _LOGGER.debug(f"Found {www_fonts_dir} in Home Assistant")
             font_file = os.path.join(www_fonts_dir, font_name)
             _LOGGER.debug(f"Font => font_name: {font_name} got font_file: {font_file}")
+    if not os.path.exists(font_file):
+        _LOGGER.debug(f"Font => {font_name} unavailable; using bundled fallback")
+        font_file = _FALLBACK_FONT
     return font_file
 
 def _draw_dashed_line(draw, x0, y0, x1, y1, dash, fill, width):
@@ -488,6 +497,8 @@ def render_image(entity_id, device, service, hass):
             d = ImageDraw.Draw(img)
             d.fontmode = "1"
             font_file = os.path.join(os.path.dirname(__file__), 'fonts/materialdesignicons-webfont.ttf')
+            if not os.path.exists(font_file):
+                font_file = _FALLBACK_FONT
             icon_data = _get_mdi_icon_data()
             chr_hex = ""
             value = element['value']
@@ -917,7 +928,7 @@ def render_image(entity_id, device, service, hass):
 
             if show_percentage:
                 font_size = min(y_end - y_start - 4, x_end - x_start - 4, 20)
-                pb_font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), 'fonts/NotoSansKR-Regular.ttf'), font_size)
+                pb_font = ImageFont.truetype(get_font_file("fonts/NotoSansKR-Regular.ttf", hass), font_size)
                 percentage_text = f"{progress}%"
                 text_bbox = img_draw.textbbox((0, 0), percentage_text, font=pb_font)
                 text_width = text_bbox[2] - text_bbox[0]

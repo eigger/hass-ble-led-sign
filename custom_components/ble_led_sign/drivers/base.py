@@ -98,6 +98,10 @@ class BaseLedDriver(ABC):
     supports_jt: bool = True
     supports_flip: bool = False
     supports_clear: bool = False
+    supports_countdown: bool = False
+    #: Built-in display modes exposed as a "Display Mode" select. Maps an option
+    #: key -> (send_command command, value) applied when that option is picked.
+    display_modes: dict[str, tuple[str, object]] = {}
     #: Extra control commands routed through ``send_command`` and exposed via
     #: the ``ble_led_sign.send_command`` service (e.g. clock, scoreboard).
     extra_commands: tuple[str, ...] = ()
