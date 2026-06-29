@@ -49,7 +49,7 @@
   "issue_tracker": "https://github.com/eigger/hass-ble-led-sign/issues",
   "requirements": [
     "pillow>=10.0.0",
-    "imagespec[datamatrix]==0.1.0",
+    "imagespec[datamatrix]==0.1.1",
     "requests>=2.31.0"
   ],
   "version": "2.0.2"
