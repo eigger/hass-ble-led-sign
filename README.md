@@ -6,247 +6,148 @@
 
 BLE LED Sign — a unified Home Assistant integration for BLE LED signs
 
-## What Is a BLE LED Sign?
+## What is a BLE LED sign?
 
-A **BLE LED sign** is a compact, battery-powered or USB-powered display that shows scrolling text, static messages, or simple graphics over **Bluetooth Low Energy (BLE)**.
+A **BLE LED sign** is a compact matrix display controlled over **Bluetooth Low Energy**. Automate scrolling text, static messages, and simple graphics from Home Assistant instead of a vendor app.
 
-Unlike traditional signs that require a dedicated mobile app for every update, this integration lets you control your sign directly from **Home Assistant** — automate messages, sync with sensors, and render rich layouts from YAML.
+The integration uses a **driver architecture**: each device family lives under `custom_components/ble_led_sign/drivers/` and shares the same entities and services. Shipped drivers:
 
-This project is built around a **driver architecture**: each BLE LED sign family is implemented as a self-contained driver under `custom_components/ble_led_sign/drivers/`, sharing the same Home Assistant entities and services. Today it ships with a full driver for the **CoolLED / iLed** families (manufactured by **JTKJ**) and a driver for the **iPixel Color** family (advertised as `LED_BLE_*`) supporting control commands (power, brightness, speed, flip, clear, clock, scoreboard, …) plus image, GIF and text display.
-
-Adding a new device family means adding one driver package — the entities, services, and config flow stay unchanged.
-
-## Key Characteristics
-
-- 💡 **LED matrix display**
-  - Bright, visible signage for indoor and outdoor use
-- 📡 **Bluetooth Low Energy**
-  - Wireless control without Wi-Fi on the device itself
-- 🎨 **Flexible rendering**
-  - Text, icons, QR codes, charts, and more via `ble_led_sign.write`
-- ⚡ **Real-time control**
-  - Power, brightness, scroll speed, and scroll mode from Home Assistant entities
-
-## Why BLE LED Signs?
-
-BLE LED signs are ideal for displaying information that:
-
-- Needs to be visible at a glance
-- Should update automatically from Home Assistant automations
-- Lives in a location where a full display or wired setup is impractical
-
-Common use cases include desk nameplates, shop window messages, event countdowns, and status boards driven by Home Assistant sensors.
-
-## 💬 Feedback & Support
-
-🐞 Found a bug? Let us know via an [Issue](https://github.com/eigger/hass-ble-led-sign/issues).  
-💡 Have a question or suggestion? Join the [Discussion](https://github.com/eigger/hass-ble-led-sign/discussions)!
-
----
-
-## Supported Devices
-
-Devices are discovered automatically via BLE. Each driver recognises its own family by advertised name and/or service UUID; the matching driver then reads resolution and capabilities from the advertisement.
-
-| Device Family | Driver | Match | Color Type | Notes |
-|---------------|--------|-------|------------|-------|
-| CoolLED 1248 | `coolled` | `CoolLED`, `CoolLEDA` / UUID `0xFFF0` | Single / Seven / Colorful | Classic matrix sign |
-| CoolLED S / X | `coolled` | `CoolLEDS`, `CoolLEDX` | Varies | Password required |
-| CoolLED M / U / UX | `coolled` | `CoolLEDM`, `CoolLEDU`, `CoolLEDUX` | Colorful | Password required, large MTU |
-| CoolLED 536 | `coolled` | `CoolLED536` | Varies | — |
-| iLed series | `coolled` | `iLedBike`, `iLedHat`, `iLedClock`, … | Varies | Some models require password |
-| iPixel Color | `ipixel_color` | `LED_BLE*` / UUID `0x00FA`, `0xAE00` | — | Full: control commands + image / GIF / text (size auto-detected) |
+| Driver | Devices | Highlights |
+|--------|---------|------------|
+| `coolled` | CoolLED / iLed (JTKJ) | Full matrix control, JT import, native text/draw/animation |
+| `ipixel_color` | `LED_BLE_*` (iPixel Color) | Control commands + PNG/GIF/text transfer, device slots |
 
 Default resolution when scan data is unavailable: **48 × 12** pixels.
 
-### Color Types
+### Color types
 
-| Type | Label | Supported Payload Colors |
-|------|-------|--------------------------|
+| Type | Label | Payload colors |
+|------|-------|----------------|
 | 0 | Single | `off`, `on`, `black`, `white` |
 | 1 | Seven | Single + `red`, `yellow`, `green`, `cyan`, `blue`, `purple` |
 | 2+ | Colorful | Seven + `orange`, `pink`, `#RRGGBB` (mapped to nearest) |
 
-Device details (resolution, device ID, firmware, color type) appear under **Settings → Devices** after pairing.
+Resolution, firmware, and color type appear under **Settings → Devices** after pairing.
 
-## Architecture & Adding a Driver
+## Feedback & Support
 
-```
-custom_components/ble_led_sign/
-├── __init__.py, config_flow.py, coordinator.py, device.py …   # HA glue (driver-agnostic)
-├── light.py / number.py / select.py / text.py / image.py      # shared entities
-├── renderer.py                                                # payload → image
-└── drivers/
-    ├── base.py        # BaseLedDriver (abstract) + DeviceEntry
-    ├── registry.py    # DRIVERS list, match_driver(), get_driver()
-    ├── data.py        # BleLedSignBluetoothDeviceData (auto-selects a driver)
-    ├── __init__.py    # send_text/image/command/... dispatch helpers
-    ├── coolled/       # full CoolLED / iLed protocol driver
-    └── ipixel_color/  # iPixel Color driver (control commands + image/GIF/text)
-```
-
-Entities and services never talk to a protocol directly — they call the dispatch
-helpers in `drivers/__init__.py`, which route to the driver named by
-`DeviceEntry.driver_id`.
-
-To add a family:
-
-1. Create `drivers/<family>/` with a `driver.py` subclassing `BaseLedDriver`.
-2. Implement `match()` and `parse()` (discovery) plus the operations the device
-   supports; set the matching `supports_*` capability flags.
-3. Register the class in `drivers/registry.py` (`DRIVERS`).
-4. Add advertisement matchers to `manifest.json` so HA discovers it.
-
-### iPixel Color protocol
-
-GATT layout of an `LED_BLE_*` device (see `drivers/ipixel_color/`):
-
-| Service | Characteristic | Properties | Role |
-|---------|----------------|------------|------|
-| `0x00FA` | `0xFA02` | Write / Write No Response | command write |
-| `0x00FA` | `0xFA03` | Notify | command notify |
-| `0xAE00` | `0xAE01` | Write No Response | bulk data write |
-| `0xAE00` | `0xAE02` | Notify | bulk data notify |
-
-Control frames are written to `0xFA02` as `[len_lo, len_hi, command, subcommand, …payload]`
-(`len` = little-endian total frame length; no checksum). Implemented single-frame
-control commands:
-
-| Action | Frame | Exposed as |
-|--------|-------|-----------|
-| Power on/off | `05 00 07 01 <on>` | `light` |
-| Brightness | `05 00 04 80 <level>` (1–100, HA 0–255 scaled) | `light` |
-| Scroll/text speed | `05 00 03 01 <speed>` | `number` |
-| Flip (upside down) | `05 00 06 80 <on>` | `switch` |
-| Clear all | `04 00 03 80` | `button` |
-| Built-in (DIY) mode | `05 00 04 01 <mode>` | `send_command` service |
-| Exit mode | `04 00 01 01` | `send_command` |
-| Clock | `0B 00 06 01 <mode> <scale> <date> <yy mm dd wk>` | `send_command` |
-| Weekday | `05 00 12 80 <week>` | `send_command` |
-| Sport / pedometer | `07 00 06 00 <mode> <speed> <dec>` | `send_command` |
-| Countdown | `07 00 0D 80 <flag> <min> <sec>` | `send_command` |
-| Chronograph | `05 00 09 80 <flag>` | `send_command` |
-| Scoreboard | `08 00 0A 80 <s1×2> <s2×2>` | `send_command` |
-| Music rhythm | `06 00 00 02 <level> <mode>` | `send_command` |
-| Music EQ (11 bars) | `10 00 01 02 <mode> +11` | `send_command` |
-| Password set/verify | `08 00 04 02 …` / `07 00 05 02 …` | `send_command` |
-| Set RTC time | `08 00 01 80 <hh mm ss> 00` | `send_command` |
-| Show saved slot | `07 00 08 80 01 00 <n>` | `send_command` |
-| Delete saved slot | `07 00 02 01 01 00 <n>` | `send_command` |
-
-The parameterised commands are reachable via the `ble_led_sign.send_command`
-service (e.g. `command: scoreboard`, `value: [3, 1]`).
-
-**Image / GIF / text** use a windowed content transfer, streamed in 12 KB
-windows split into ≤244-byte writes and acknowledged via `0xFA03`:
-
-```
-message = len(2 LE) + [type0, type1, option] + size(4 LE) + crc32(4 LE)
-          + [tail, save_slot] + chunk
-```
-
-`type0,type1`/`tail` = `02 00`/`00` (still image), `03 00`/`02` (GIF),
-`00 01`/`00` (text); `option` is `0x00` for the first window then `0x02`. Panel
-resolution is read from a device-info query (`08 00 01 80 …`).
-
-- **Image / GIF** — the panel decodes a standard PNG/GIF, so the (resized) file
-  bytes are sent directly.
-- **Text** — rendered with the bundled **Galmuri** pixel font (full Hangul) into
-  the device's character payload (`[count] + properties + glyph blocks`).
-  Scrolling, rainbow, color and background are device-side options set in the
-  properties header (`send_text` service: `animation`, `speed`, `rainbow`,
-  `bg_color`, `font`).
-- **Slots** — `save_slot` (1–10) on `send_image`/`send_animation`/`send_text`
-  stores content in device memory; recall instantly with `show_slot` (no phone
-  needed).
-
-## Entities
-
-Entities are created **only for the capabilities the matched driver supports**,
-so a device exposes just what it can actually do.
-
-| Platform | Entity | Capability | Description |
-|----------|--------|------------|-------------|
-| `light` | Display Power | power / brightness | Power on/off, brightness; scroll mode as effect when supported |
-| `number` | Scroll Speed | speed | Scroll speed (0–255) |
-| `select` | Scroll Mode | mode | `static`, `left`, `right`, `up`, `down`, `snowflake`, `picture`, `laser` |
-| `switch` | Flip Display | flip | Flip the display upside down |
-| `button` | Clear Display | clear | Clear all stored content |
-| `text` | Scroll Text | text | Scrolling text (sent over BLE on change) |
-| `image` | Last Sent Display | image | Last image successfully sent to the device |
-| `image` | Render Preview | image | Preview from `dry_run` or last render |
-
-Example: the **iPixel Color** driver exposes `light` (power/brightness),
-`number` (speed), `switch` (flip), `button` (clear), `text`, and the `image`
-preview entities; image/GIF/text send via the `send_image` / `send_animation` /
-`send_text` services, and its remaining commands (clock, scoreboard, countdown,
-DIY mode, …) via `ble_led_sign.send_command`. The **CoolLED** driver supports
-everything natively.
-
-## Installation
-
-1. Install this integration with HACS (adding repository required), or copy the contents of this
-repository into the `custom_components/ble_led_sign` directory.
-2. Restart Home Assistant.
-3. Go to **Settings → Devices & Services → Add Integration → BLE LED Sign**.
-
-## ⚠️ Important Notice
-
-- It is **strongly recommended to use a Bluetooth proxy instead of a built-in Bluetooth adapter**.  
-  Bluetooth proxies generally offer more stable connections and better range, especially in environments with multiple BLE devices.
-
-> [!TIP]
-> For hardware recommendations, refer to [Great ESP32 Board for an ESPHome Bluetooth Proxy](https://community.home-assistant.io/t/great-esp32-board-for-an-esphome-bluetooth-proxy/916767/31).  
-- When using a Bluetooth proxy, it is strongly recommended to **keep the scan interval at its default value**.  
-  Changing these values may cause issues with Bluetooth data transmission.
-- **bluetooth_proxy:** must always have **active: true**.
-
-  Example (recommended configuration with default values):
-
-  ```yaml
-  esp32_ble_tracker:
-    scan_parameters:
-      active: true
-
-  bluetooth_proxy:
-    active: true
-  ```
-
-## Options
-
-After adding a device, configure options via **Settings → Devices & Services → BLE LED Sign → Configure**:
-
-| Option | Default | Range | Description |
-|--------|---------|-------|-------------|
-| **Device Password** | `000000` | 6 characters | Password for protected models (CoolLEDS, CoolLEDX, CoolLEDM, …) |
-| **Retry Count** | 3 | 1–10 | Number of retry attempts when BLE write fails |
-| **Packet Delay (ms)** | 15 | 0–1000 | Delay in milliseconds between each BLE packet |
-
-> [!TIP]
-> If you experience frequent write failures, try increasing the **Retry Count**.  
-> If writes are unstable on larger payloads, try setting **Packet Delay** to 50–100 ms.
+- Found a bug? [Open an issue](https://github.com/eigger/hass-ble-led-sign/issues)
+- Questions or ideas? [Join the discussion](https://github.com/eigger/hass-ble-led-sign/discussions)
 
 ---
 
-## Service: `ble_led_sign.write`
+## Supported devices
 
-Renders a display image from payload elements and sends it to the sign. Colors are mapped to the device palette when rendering; seven-color and colorful devices transmit separate R, G, and B bitplanes.
+| Device family | Driver | Match | Notes |
+|---------------|--------|-------|-------|
+| CoolLED 1248 | `coolled` | `CoolLED`, `CoolLEDA` / UUID `0xFFF0` | Classic matrix sign |
+| CoolLED S / X | `coolled` | `CoolLEDS`, `CoolLEDX` | Password required |
+| CoolLED M / U / UX | `coolled` | `CoolLEDM`, `CoolLEDU`, `CoolLEDUX` | Password, large MTU |
+| CoolLED 536 | `coolled` | `CoolLED536` | — |
+| iLed series | `coolled` | `iLedBike`, `iLedHat`, `iLedClock`, … | Some models need password |
+| iPixel Color | `ipixel_color` | `LED_BLE*` / UUID `0x00FA`, `0xAE00` | Commands + image/GIF/text |
 
-### Service Parameters
+## Entities
+
+Created **only for capabilities the matched driver supports**:
+
+| Platform | Entity | Description |
+|----------|--------|-------------|
+| `light` | Display Power | Power and brightness; scroll mode as effect when supported |
+| `number` | Scroll Speed | Scroll speed (0–255) |
+| `select` | Scroll Mode | `static`, `left`, `right`, `up`, `down`, `snowflake`, `picture`, `laser` |
+| `switch` | Flip Display | Flip upside down |
+| `button` | Clear Display | Clear stored content |
+| `text` | Scroll Text | Scrolling text (sent on change) |
+| `image` | Last Sent Display | Last image successfully sent |
+| `image` | Render Preview | Preview from `dry_run` or last render |
+
+**CoolLED** exposes the full set where hardware allows. **iPixel Color** uses `send_image` / `send_animation` / `send_text` for content and `ble_led_sign.send_command` for clock, scoreboard, countdown, DIY mode, and other control frames.
+
+## Installation
+
+1. Install with HACS (custom repository required), or copy this repo into `custom_components/ble_led_sign`.
+2. Restart Home Assistant.
+3. Add **BLE LED Sign** via **Settings → Devices & Services → Add Integration**.
+
+## Important Notice
+
+Use a **Bluetooth proxy** instead of a built-in adapter when possible — especially with multiple BLE devices nearby.
+
+> [!TIP]
+> Hardware recommendations: [Great ESP32 Board for an ESPHome Bluetooth Proxy](https://community.home-assistant.io/t/great-esp32-board-for-an-esphome-bluetooth-proxy/916767/31)
+
+Keep the proxy scan interval at its default. **`bluetooth_proxy` must have `active: true`.**
+
+```yaml
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+bluetooth_proxy:
+  active: true
+```
+
+## Options
+
+Configure via **Settings → Devices & Services → BLE LED Sign → Configure**:
+
+| Option | Default | Range | Description |
+|--------|---------|-------|-------------|
+| **Device Password** | `000000` | 6 chars | Password for protected CoolLED / iLed models |
+| **Retry Count** | 3 | 1–10 | Retries when a BLE write fails |
+| **Packet Delay (ms)** | 15 | 0–1000 | Delay between BLE packets |
+
+> [!TIP]
+> Unstable writes: increase **Retry Count** or set **Packet Delay** to 50–100 ms for large payloads.
+
+---
+
+## Payload & rendering (`imagespec`)
+
+From version 2.0.0, `ble_led_sign.write` renders with **[imagespec](https://github.com/eigger/imagespec)** — a declarative YAML list of drawing elements encoded and sent to the sign.
+
+**Documentation (maintained in imagespec, not duplicated here):**
+
+| Topic | Link |
+|-------|------|
+| Element examples with preview images | [imagespec/docs/elements.md](https://github.com/eigger/imagespec/blob/main/docs/elements.md) |
+| All element fields & defaults | [imagespec README — Element Reference](https://github.com/eigger/imagespec#elements-reference) |
+| Layout, palette, LLM authoring guide | [imagespec/docs/authoring.md](https://github.com/eigger/imagespec/blob/main/docs/authoring.md) |
+
+**BLE LED Sign-specific behaviour:**
+
+- **Resolution:** `width` and `height` come from the **device profile** (columns × rows), not the service call.
+- **Palette:** depends on device color type (see [Color types](#color-types)). Off-palette colors are quantized.
+- **Rotation:** `rotate: 90/180/270` uses **canvas mode** — fixed panel size, background rotates.
+- **Default font:** `Galmuri14.ttf` (bundled). Custom fonts also work from `www/fonts/`.
+- **`plot` element:** reads history from Home Assistant **Recorder**.
+- **`icon` element:** Home Assistant `weather-*` icon names are mapped automatically.
+- **Encoding:** seven-color and colorful devices send separate R/G/B bitplanes; single-color devices use one bitplane with `threshold` / `invert`.
+- **Layout:** prefer `row` / `column` / `stack` over hand-placed coordinates.
+- **Image entities:** **Last Sent Display** and **Render Preview** (`dry_run`).
+
+---
+
+## Services
+
+### `ble_led_sign.write`
+
+Renders payload elements and sends the bitmap to the sign.
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `payload` | ✅ | — | List of drawing elements (see [Payload Element Types](#payload-element-types)) |
-| `rotate` | ❌ | `0` | Image rotation: `0`, `90`, `180`, `270` |
-| `background` | ❌ | `black` | Background color (mapped to device palette) |
-| `threshold` | ❌ | `128` | Luminance threshold for single-color bitmap encoding (`0`–`255`) |
-| `invert` | ❌ | `false` | For single-color devices: when false, brighter pixels are lit |
-| `dry_run` | ❌ | `false` | Generate preview image without sending to device |
-
-### Basic Usage
+| `payload` | yes | — | List of [imagespec elements](https://github.com/eigger/imagespec/blob/main/docs/elements.md) |
+| `rotate` | no | `0` | `0`, `90`, `180`, or `270` |
+| `background` | no | `black` | Mapped to device palette |
+| `threshold` | no | `128` | Luminance threshold for single-color encoding (`0`–`255`) |
+| `invert` | no | `false` | Single-color: when false, brighter pixels are lit |
+| `dry_run` | no | `false` | Render only; updates **Render Preview** without BLE send |
 
 ```yaml
 action: ble_led_sign.write
+target:
+  device_id: <your device>
 data:
   payload:
     - type: text
@@ -255,34 +156,14 @@ data:
       y: 1
       size: 10
       color: white
-target:
-  device_id: <your device>
 ```
 
-### Rotation & Background
+Preview:
 
 ```yaml
 action: ble_led_sign.write
-data:
-  rotate: 90
-  background: black
-  payload:
-    - type: text
-      value: Rotated!
-      x: 2
-      y: 1
-      size: 10
-      color: white
 target:
   device_id: <your device>
-```
-
-### Dry Run (Preview Only)
-
-> Preview image is available via the **Render Preview** image entity without sending data to the physical device.
-
-```yaml
-action: ble_led_sign.write
 data:
   dry_run: true
   payload:
@@ -292,264 +173,14 @@ data:
       y: 1
       size: 10
       color: white
-target:
-  device_id: <your device>
 ```
 
----
-
-## Service: `ble_led_sign.send_text`
-
-Sends scrolling text directly to the sign (native text protocol). Seven-color devices use RGB bitplanes per character.
-
-```yaml
-action: ble_led_sign.send_text
-data:
-  text: Hello Home Assistant
-  color: red
-target:
-  device_id: <your device>
-```
-
----
-
-## Service: `ble_led_sign.send_image`
-
-Sends a local image file to the sign (resized, RGB bitplanes for color devices, chunked transfer).
-
-```yaml
-action: ble_led_sign.send_image
-data:
-  image_path: /config/www/sign.png
-  threshold: 128
-  invert: false
-target:
-  device_id: <your device>
-```
-
----
-
-## Service: `ble_led_sign.send_animation`
-
-Sends an animated GIF to the sign.
-
-```yaml
-action: ble_led_sign.send_animation
-data:
-  image_path: /config/www/sign.gif
-  speed_ms: 500
-target:
-  device_id: <your device>
-```
-
----
-
-## Service: `ble_led_sign.send_jt`
-
-Sends a CoolLED JT program file (static graffiti or animation).
-
-```yaml
-action: ble_led_sign.send_jt
-data:
-  jt_path: /config/www/sign.jt
-target:
-  device_id: <your device>
-```
-
----
-
-## Service: `ble_led_sign.set_icon`
-
-Shows a built-in icon by ID.
-
-```yaml
-action: ble_led_sign.set_icon
-data:
-  icon_id: 1
-target:
-  device_id: <your device>
-```
-
----
-
-## Service: `ble_led_sign.set_music`
-
-Shows an 8-bar music equalizer pattern.
-
-```yaml
-action: ble_led_sign.set_music
-data:
-  heights: [4, 8, 12, 16, 12, 8, 4, 2]
-  colors: [1, 2, 3, 4, 3, 2, 1, 1]
-target:
-  device_id: <your device>
-```
-
----
-
-### Payload Element Examples
-
-> [!TIP]
-> All elements support the `visible` field (`true`/`false`) to conditionally show or hide them.
-
-> [!NOTE]
-> **Color values** depend on the device's color type (see [Color Types](#color-types)).
-> HEX strings (`#RRGGBB`) are accepted on colorful devices but will be **automatically mapped to the nearest supported color**.
-
-#### text
-
-```yaml
-- type: text
-  value: "Hello World!"
-  x: 2
-  y: 1
-  size: 10
-  color: white
-  font: "NotoSansKR-Bold.ttf"
-  anchor: lt            # Pillow anchor (e.g. lt, mt, rt, lm, mm, rm)
-  align: left           # left, center, right
-  spacing: 5
-  stroke_width: 1
-  stroke_fill: black
-  max_width: 40         # Auto-wrap text within this pixel width
-  rotation: 0           # Rotate text by angle (degrees counter-clockwise)
-  background: "#333333" # Optional background color behind text
-  background_padding: 2 # Padding around background (default: 2)
-```
-
-If `y` is omitted the element stacks below the previous element automatically (`y_padding` controls the gap, default `10`).
-
-#### multiline
-
-```yaml
-- type: multiline
-  value: "Line1;Line2;Line3"
-  delimiter: ";"
-  x: 2
-  start_y: 1
-  offset_y: 12
-  size: 10
-  font: "NotoSansKR-Regular.ttf"
-  color: white
-```
-
-#### line
-
-```yaml
-- type: line
-  x_start: 0
-  x_end: 48
-  y_start: 6
-  y_end: 6
-  fill: white
-  width: 1
-  dash: [4, 2]     # Optional: [on_px, off_px] for dashed/dotted lines
-```
-
-#### rectangle
-
-```yaml
-- type: rectangle
-  x_start: 2
-  y_start: 2
-  x_end: 46
-  y_end: 10
-  fill: red
-  outline: white
-  width: 1
-  radius: 2
-```
-
-#### icon
-
-Uses [Material Design Icons](https://pictogrammers.com/library/mdi/). You can use the icon name with or without the `mdi:` prefix.
-
-```yaml
-- type: icon
-  value: "weather-sunny"
-  x: 2
-  y: 1
-  size: 12
-  color: yellow
-```
-
-#### dlimg
-
-Supports **HTTP/HTTPS URLs**, **local file paths**, and **Base64 data URIs**.
-
-| `mode` | Description |
-|--------|-------------|
-| `stretch` | Stretch to fill exactly (default) |
-| `fit` / `contain` | Scale preserving aspect ratio, pad with transparency |
-| `fill` | Scale and crop to fill exactly, no padding |
-
-```yaml
-- type: dlimg
-  url: "/config/www/images/logo.png"
-  x: 0
-  y: 0
-  xsize: 48
-  ysize: 12
-  mode: fit
-```
-
-#### qrcode
-
-```yaml
-- type: qrcode
-  data: "https://www.home-assistant.io"
-  x: 20
-  y: 0
-  boxsize: 1
-  border: 1
-  color: white
-  bgcolor: black
-```
-
-#### progress_bar
-
-```yaml
-- type: progress_bar
-  x_start: 2
-  y_start: 8
-  x_end: 46
-  y_end: 11
-  progress: 75
-  direction: right
-  background: black
-  fill: green
-  outline: white
-  width: 1
-  show_percentage: false
-```
-
-#### plot
-
-Reads entity history from **Home Assistant Recorder**.
-
-```yaml
-- type: plot
-  data:
-    - entity: sensor.temperature
-      color: green
-      width: 1
-  duration: 3600
-  x_start: 2
-  y_start: 1
-  x_end: 46
-  y_end: 11
-  size: 8
-  font: "NotoSansKR-Regular.ttf"
-```
-
-For additional element types (`barcode`, `datamatrix`, `diagram`, `gauge`, `arc`, `polygon`, `table`, `text_box`, `rectangle_pattern`, `circle`, `ellipse`), see the [hass-gicisky README](https://github.com/eigger/hass-gicisky#payload-element-types) — the same payload schema is supported.
-
----
-
-### Combined Example
+Combined example:
 
 ```yaml
 action: ble_led_sign.write
+target:
+  device_id: <your device>
 data:
   background: black
   payload:
@@ -586,55 +217,63 @@ data:
       progress: "{{ states('sensor.humidity') | int }}"
       direction: right
       fill: cyan
-target:
-  device_id: <your device>
 ```
 
----
+### Other services
 
-## Payload Element Types
+| Service | Purpose |
+|---------|---------|
+| `ble_led_sign.send_text` | Native scrolling text (`text`, `color`, `animation`, `speed`, `rainbow`, `bg_color`, `font`, `save_slot`) |
+| `ble_led_sign.send_image` | Local image file (`image_path`, `threshold`, `invert`, `save_slot`) |
+| `ble_led_sign.send_animation` | Animated GIF (`image_path`, `speed_ms`, `threshold`, `invert`, `save_slot`) |
+| `ble_led_sign.send_jt` | CoolLED JT program file (`jt_path`) |
+| `ble_led_sign.set_icon` | Built-in icon by ID (`icon_id`) |
+| `ble_led_sign.set_music` | 8-bar equalizer (`heights`, `colors`) |
+| `ble_led_sign.send_command` | iPixel control commands (`command`, `value`) — clock, scoreboard, countdown, flip, DIY mode, slots, … |
 
-> [!TIP]
-> All elements support the `visible` field (`true`/`false`, default: `true`) to conditionally show or hide them.
+**iPixel Color** examples:
 
-| **Type** | **Required Fields** | **Optional Fields** | **Description** |
-|----------|---------------------|---------------------|-----------------|
-| **text** | `x`, `value` | `y`, `size`(10), `font`, `color`(white), `anchor`(lt), `align`(left), `spacing`(5), `stroke_width`(0), `stroke_fill`(black), `max_width`, `y_padding`(10), `rotation`(0), `background`, `background_padding`(2) | Draws text. Auto-stacks if `y` omitted. |
-| **multiline** | `x`, `value`, `delimiter`, `offset_y` | `start_y`, `size`(10), `font`, `color`, `anchor`(lm), `stroke_width`(0), `stroke_fill` | Splits text by delimiter and draws each line. |
-| **line** | `x_start`, `x_end` | `y_start`, `y_end`, `fill`, `width`(1), `y_padding`(0), `dash` | Draws a straight line. |
-| **rectangle** | `x_start`, `x_end`, `y_start`, `y_end` | `fill`, `outline`, `width`(1), `radius`(0), `corners`(all) | Draws a rectangle with optional rounded corners. |
-| **rectangle_pattern** | `x_start`, `y_start`, `x_size`, `y_size`, `x_repeat`, `y_repeat`, `x_offset`, `y_offset` | `fill`, `outline`, `width`(1), `radius`(0), `corners`(all) | Repeated grid of rectangles. |
-| **circle** | `x`, `y`, `radius` | `fill`, `outline`, `width`(1) | Draws a circle at center (`x`, `y`). |
-| **ellipse** | `x_start`, `x_end`, `y_start`, `y_end` | `fill`, `outline`, `width`(1) | Draws an ellipse inside a bounding box. |
-| **arc** | `x_start`, `y_start`, `x_end`, `y_end`, `start_angle`, `end_angle` | `fill`, `outline`, `width`(1), `pie`(false) | Draws an arc or filled pieslice. |
-| **gauge** | `x`, `y`, `radius`, `progress` | `min_value`(0), `max_value`(100), `fill`, `background`, `outline`, `width`(8), `show_value`(false), `font`, `size`(16), `color` | Circular gauge (270° sweep). |
-| **polygon** | `points` | `fill`, `outline`, `width`(1) | Draws a polygon. `points`: `"x1,y1;x2,y2;..."` format. |
-| **table** | `x`, `y`, `columns`, `rows` | `header`(true), `header_fill`, `header_color`, `cell_color`, `cell_fill`, `border_color`, `border_width`(1), `row_height`, `padding`(4), `font`, `font_size`(14), `align`(left) | Draws a bordered table. |
-| **text_box** | `x`, `y`, `value` | `size`(10), `font`, `padding`(5), `fill`, `color`, `outline`, `width`(1), `radius`(5) | Text inside a rounded background box. |
-| **icon** | `x`, `y`, `value`, `size` | `color`/`fill`, `anchor`(la), `stroke_width`(0), `stroke_fill` | [Material Design Icons](https://pictogrammers.com/library/mdi/). |
-| **dlimg** | `x`, `y`, `url`, `xsize`, `ysize` | `rotate`(0), `mode`(stretch) | Loads image from URL, local path, or Base64. |
-| **qrcode** | `x`, `y`, `data` | `color`, `bgcolor`, `border`(1), `boxsize`(2) | Generates and embeds a QR code. |
-| **barcode** | `x`, `y`, `data` | `color`, `bgcolor`, `code`(code128), `module_width`(0.2), `module_height`(7), `quiet_zone`(6.5), `font_size`(5), `text_distance`(5.0), `write_text`(true) | Draws various barcode formats. |
-| **datamatrix** | `x`, `y`, `data` | `color`, `bgcolor`, `boxsize`(2) | DataMatrix 2D barcode. Requires `pyStrich`. |
-| **diagram** | `x`, `y`, `height` | `width`(canvas), `margin`(20), `font`, `bars` | Bar chart. |
-| **plot** | `data`([{`entity`}]) | `duration`(86400), `x_start`, `y_start`, `x_end`, `y_end`, `size`(10), `font`, `low`, `high`, `ylegend`, `yaxis`, `xlegend`, `debug`(false) | Time-series graph from HA Recorder. |
-| **progress_bar** | `x_start`, `x_end`, `y_start`, `y_end`, `progress` | `direction`(right), `background`, `fill`, `outline`, `width`(1), `radius`(0), `show_percentage`(false) | Progress bar. |
+```yaml
+# Scrolling text with device-side animation
+action: ble_led_sign.send_text
+target:
+  device_id: <your device>
+data:
+  text: Hello Home Assistant
+  color: red
+  animation: 1
+  speed: 80
+
+# Save to device slot 3, recall later with show_slot
+action: ble_led_sign.send_image
+target:
+  device_id: <your device>
+data:
+  image_path: /config/www/sign.png
+  save_slot: 3
+
+action: ble_led_sign.send_command
+target:
+  device_id: <your device>
+data:
+  command: show_slot
+  value: 3
+
+# Scoreboard: team scores 3 and 1
+action: ble_led_sign.send_command
+target:
+  device_id: <your device>
+data:
+  command: scoreboard
+  value: [3, 1]
+```
 
 ---
 
 ## Fonts
 
-The `text`, `multiline`, `diagram`, `plot`, and `table` elements accept a `font` field.
-
-### Custom Fonts
-
-Place `.ttf` font files in your Home Assistant `www/fonts` directory:
-
-```
-/config/www/fonts/NotoSansKR-Regular.ttf
-```
-
-Then reference them by filename:
+- **`ble_led_sign.write` payloads:** default `Galmuri14.ttf` from `custom_components/ble_led_sign/fonts/galmuri/`. Also checks `www/fonts/`.
+- **`ble_led_sign.send_text` (iPixel):** bundled **Galmuri** pixel font (Hangul + Latin, SIL OFL 1.1 — see `fonts/galmuri/LICENSE.txt`). Override with the `font` field.
 
 ```yaml
 - type: text
@@ -646,31 +285,34 @@ Then reference them by filename:
   color: white
 ```
 
-> [!NOTE]
-> Fonts are loaded from `www/fonts/` in your Home Assistant config. Install the font files you need before using them in payloads.
+Place custom `.ttf` files in `config/www/fonts/`.
+
+---
+
+## Adding a driver
+
+1. Create `drivers/<family>/` with `driver.py` subclassing `BaseLedDriver`.
+2. Implement `match()`, `parse()`, and supported operations; set `supports_*` flags.
+3. Register in `drivers/registry.py` (`DRIVERS`).
+4. Add BLE matchers to `manifest.json`.
+
+Entities and services call dispatch helpers in `drivers/__init__.py` — they never talk to a protocol directly.
 
 ---
 
 ## Limitations
 
-- Seven-color and colorful devices encode graffiti/draw/animation data as separate R, G, and B bitplanes; single-color devices use one bitplane with a luminance threshold.
-- Built-in icon IDs and music bar color indices are device-specific; experiment on your hardware.
-- JT import supports `graffitiData` and `aniData` payloads from JT files.
-- Program transfer for M/U/UX large-panel models may differ from 1248-class devices.
-- CJK and emoji rendering depends on the fonts you provide.
-- Verify behavior on your specific device model and firmware version.
+- Seven-color and colorful devices encode draw/animation data as separate R/G/B bitplanes; single-color devices use one bitplane with `threshold`.
+- Built-in icon IDs and music bar color indices are device-specific.
+- JT import supports `graffitiData` and `aniData` payloads.
+- Program transfer for M/U/UX large panels may differ from 1248-class devices.
+- CJK and emoji rendering depends on fonts you provide.
+- Verify behavior on your specific model and firmware.
 
 ---
 
-## Fonts
-
-The iPixel Color text feature bundles the **Galmuri** pixel font for Hangul +
-Latin, licensed under the SIL Open Font License 1.1
-(`custom_components/ble_led_sign/fonts/galmuri/LICENSE.txt`). Provide your own
-`.ttf` via the `font` field of `send_text` to override it.
-
 ## References
 
-- [hass-gicisky](https://github.com/eigger/hass-gicisky) — shared renderer architecture and payload schema
+- [imagespec](https://github.com/eigger/imagespec) — rendering engine
 - [Home Assistant Bluetooth](https://www.home-assistant.io/integrations/bluetooth/)
 - [ESPHome Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html)
