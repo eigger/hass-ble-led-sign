@@ -52,5 +52,5 @@
     "imagespec[datamatrix]>=1.0.0",
     "requests>=2.31.0"
   ],
-  "version": "2.0.2"
+  "version": "2.0.3"
 }
