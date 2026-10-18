@@ -111,8 +111,11 @@ def coolled_advertisement_data() -> AdvertisementData:
     )
 
 
-def _make_ble_device(address: str, name: str) -> BLEDevice:
-    return BLEDevice(address, name, {})
+def _make_ble_device(address: str, name: str, rssi: int = -55) -> BLEDevice:
+    try:
+        return BLEDevice(address, name, {}, rssi)
+    except TypeError:
+        return BLEDevice(address, name, {})
 
 
 @pytest.fixture
