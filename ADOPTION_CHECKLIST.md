@@ -58,10 +58,10 @@
 
 | 검증 축 / 상태 | 통합 커밋 | Python / HA / 플러그인 실제 버전 | 대상 패키지 실제 버전·extras·marker | 명령·테스트 결과·pip check / CI run·job | skip·제외·미검증 범위 |
 |---|---|---|---|---|---|
-| 현재 환경 / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | 로컬 Python 3.14.5, 원격 CI Python 3.14.8 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 | imagespec 1.1.0 | 원격 Tests pass, 로컬 pytest 41 passed | 없음 (0 skipped) |
-| 정확한 최소 HA / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | 로컬 Python 3.13.14, 원격 CI Python 3.13.16 / HA 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 | imagespec 1.1.0 | 원격 Tests pass, 로컬 pytest 41 passed | 없음 (0 skipped) |
-| 정확한 최소 라이브러리 / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | Python 3.14 / 3.13 | imagespec 1.1.0 | 원격 Tests(39113466684) minimum-packages pass | 없음 (0 skipped) |
-| 원격 Validate / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | Ubuntu latest | HACS 9 checks, Hassfest valid 0 invalid | 원격 Validate(39113466662) 성공 | 없음 |
+| 현재 환경 / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | 로컬 Python 3.14.5, 원격 CI Python 3.14.8 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 | imagespec 1.1.0 | 원격 Tests(39115741996) pass, 로컬 pytest 41 passed | 없음 (0 skipped) |
+| 정확한 최소 HA / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | 로컬 Python 3.13.14, 원격 CI Python 3.13.16 / HA 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 | imagespec 1.1.0 | 원격 Tests(39115741996) pass, 로컬 pytest 41 passed | 없음 (0 skipped) |
+| 정확한 최소 라이브러리 / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | Python 3.14 / 3.13 | imagespec 1.1.0 | 원격 Tests(39115741996) minimum-packages pass | 없음 (0 skipped) |
+| 원격 Validate / PASS | [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13) | Ubuntu latest | HACS 9 checks, Hassfest valid 0 invalid | 원격 Validate(39115742010) 성공 | 없음 |
 
 ## HACS·CI·의존성 업데이트
 

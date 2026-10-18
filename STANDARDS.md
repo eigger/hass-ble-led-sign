@@ -16,7 +16,7 @@
 - 최소 HA 검증 환경: 로컬 Python 3.13.14 / 원격 CI Python 3.13.16 / Home Assistant 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 (41 passed)
 - 최소 package 검증: imagespec==1.1.0 (Core 기본 의존성인 pillow, requests를 manifest에서 제외하고 imagespec만 선언)
 - PR: [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13)
-- CI 검증: [Tests](https://github.com/eigger/hass-ble-led-sign/actions/runs/39113466684), [Validate](https://github.com/eigger/hass-ble-led-sign/actions/runs/39113466662)
+- CI 검증: [Tests](https://github.com/eigger/hass-ble-led-sign/actions/runs/39115741996), [Validate](https://github.com/eigger/hass-ble-led-sign/actions/runs/39115742010)
 - 예외: 없음
 
 ## 예외
