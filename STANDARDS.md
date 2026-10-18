@@ -15,6 +15,8 @@
 - current HA 테스트 환경: Python 3.14.5 / Home Assistant 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 (38 passed)
 - 최소 HA 검증 환경: Python 3.13.14 / Home Assistant 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 (38 passed)
 - 최소 package 검증: imagespec==1.1.0
+- PR: [PR #13](https://github.com/eigger/hass-ble-led-sign/pull/13)
+- CI 검증: [Tests](https://github.com/eigger/hass-ble-led-sign/actions/runs/39113466684), [Validate](https://github.com/eigger/hass-ble-led-sign/actions/runs/39113466662)
 - 예외: 없음
 
 ## 예외
