@@ -63,25 +63,55 @@ async def test_bluetooth_discovery_flow(
 
 async def test_bluetooth_discovery_in_progress(
     hass: HomeAssistant,
-    advertisement: BluetoothServiceInfoBleak,
+    enable_bluetooth: None,
+    coolled_advertisement_data: AdvertisementData,
 ) -> None:
     """Test discovering an in-progress flow aborts with already_in_progress."""
+    device = _make_ble_device(COOLLED_ADDRESS, COOLLED_NAME)
+    info = BluetoothServiceInfoBleak.from_scan(
+        "00:00:00:00:00:01",
+        device,
+        coolled_advertisement_data,
+        monotonic(),
+        True,
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=advertisement,
+        data=info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    # Second discovery initiation for the same device while first flow is open
+    # Second flow with the same device while first flow is open must abort
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=advertisement,
+        data=info,
     )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
+
+
+async def test_automatic_bluetooth_discovery(
+    hass: HomeAssistant,
+    advertisement: BluetoothServiceInfoBleak,
+) -> None:
+    """Test automatic bluetooth discovery initiated by scanner advertisement."""
+    await hass.async_block_till_done()
+    progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(progress) == 1
+    flow = progress[0]
+    assert flow["context"]["unique_id"] == advertisement.address
+
+    with patch("custom_components.ble_led_sign.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == advertisement.address
 
 
 async def test_bluetooth_discovery_already_configured(
