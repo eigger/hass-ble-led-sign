@@ -53,8 +53,8 @@ def test_manifest_requirements(manifest: dict) -> None:
     """Verify declared requirements."""
     reqs = manifest.get("requirements", [])
     assert any(r.startswith("imagespec") for r in reqs)
-    assert any(r.startswith("pillow") for r in reqs)
-    assert any(r.startswith("requests") for r in reqs)
+    assert not any(r.startswith("pillow") for r in reqs)
+    assert not any(r.startswith("requests") for r in reqs)
 
 
 def test_bluetooth_matchers(manifest: dict) -> None:

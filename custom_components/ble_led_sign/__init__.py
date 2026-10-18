@@ -13,10 +13,11 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
 )
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from PIL import Image, ImageColor
@@ -281,15 +282,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) 
     return unload_ok
 
 
-def _normalize_device_ids(service: ServiceCall) -> list[str]:
+def _normalize_device_ids(hass: HomeAssistant, service: ServiceCall) -> list[str]:
     # Home Assistant merges the service ``target`` (device_id/entity_id/area_id)
     # into ``service.data``; ServiceCall has no ``target`` attribute.
-    device_ids = service.data.get(ATTR_DEVICE_ID)
-    if isinstance(device_ids, str):
-        return [device_ids]
-    if device_ids:
-        return list(device_ids)
-    return []
+    device_ids: list[str] = []
+    raw_devices = service.data.get(ATTR_DEVICE_ID)
+    if isinstance(raw_devices, str):
+        device_ids.append(raw_devices)
+    elif raw_devices:
+        device_ids.extend(raw_devices)
+
+    raw_entities = service.data.get(ATTR_ENTITY_ID)
+    entity_ids: list[str] = []
+    if isinstance(raw_entities, str):
+        entity_ids.append(raw_entities)
+    elif raw_entities:
+        entity_ids.extend(raw_entities)
+
+    if entity_ids:
+        ent_reg = er.async_get(hass)
+        for entity_id in entity_ids:
+            entry = ent_reg.async_get(entity_id)
+            if entry and entry.device_id and entry.device_id not in device_ids:
+                device_ids.append(entry.device_id)
+
+    return device_ids
 
 
 async def _run_for_devices(
@@ -297,7 +314,7 @@ async def _run_for_devices(
     service: ServiceCall,
     callback,
 ) -> None:
-    device_ids = _normalize_device_ids(service)
+    device_ids = _normalize_device_ids(hass, service)
     if not device_ids:
         raise HomeAssistantError("device_id is required")
 

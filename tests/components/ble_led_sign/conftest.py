@@ -111,6 +111,13 @@ def coolled_advertisement_data() -> AdvertisementData:
     )
 
 
+def _make_ble_device(address: str, name: str, rssi: int = -55) -> BLEDevice:
+    try:
+        return BLEDevice(address, name, {}, rssi=rssi)
+    except TypeError:
+        return BLEDevice(address, name, {}, rssi)
+
+
 @pytest.fixture
 async def advertisement(
     hass: HomeAssistant,
@@ -118,10 +125,10 @@ async def advertisement(
     coolled_advertisement_data: AdvertisementData,
 ) -> BluetoothServiceInfoBleak:
     """Feed a CoolLED scan result through the real HA Bluetooth manager."""
-    device = BLEDevice(
+    device = _make_ble_device(
         COOLLED_ADDRESS,
         COOLLED_NAME,
-        None,
+        -55,
     )
     info = BluetoothServiceInfoBleak.from_scan(
         "00:00:00:00:00:01",
@@ -155,10 +162,10 @@ async def ipixel_advertisement(
     ipixel_advertisement_data: AdvertisementData,
 ) -> BluetoothServiceInfoBleak:
     """Feed an iPixel Color scan result through the real HA Bluetooth manager."""
-    device = BLEDevice(
+    device = _make_ble_device(
         IPIXEL_ADDRESS,
         IPIXEL_NAME,
-        None,
+        -60,
     )
     info = BluetoothServiceInfoBleak.from_scan(
         "00:00:00:00:00:01",
