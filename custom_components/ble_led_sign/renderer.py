@@ -1,10 +1,10 @@
 import os
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.recorder.history import get_significant_states
+from homeassistant.exceptions import HomeAssistantError
+from imagespec import RenderContext, RenderError, render
 
-from imagespec import render, RenderContext, RenderError
-from .drivers.coolled.colors import default_background, get_palette
+from .drivers.coolled.colors import get_palette
 
 
 def map_weather_icon(icon: str) -> str:
@@ -12,7 +12,7 @@ def map_weather_icon(icon: str) -> str:
         weather_mapping = {
             "clear-night": "night",
             "partlycloudy": "partly-cloudy",
-            "exceptional": "sunny-off"
+            "exceptional": "sunny-off",
         }
         clean_icon = icon.removeprefix("weather-")
         mapped = weather_mapping.get(clean_icon, clean_icon)
@@ -24,13 +24,13 @@ def map_weather_icon(icon: str) -> str:
 def _make_context(hass, *, default_font, palette):
     def font_resolver(name):
         base_name = os.path.basename(name)
-        
+
         # 1. Check local components fonts/ directory
         local_font_dir = os.path.join(os.path.dirname(__file__), "fonts")
         local_path = os.path.join(local_font_dir, base_name)
         if os.path.exists(local_path):
             return local_path
-        
+
         # Also check inside fonts/galmuri/
         galmuri_path = os.path.join(local_font_dir, "galmuri", base_name)
         if os.path.exists(galmuri_path):
@@ -64,7 +64,7 @@ def _make_context(hass, *, default_font, palette):
 
 def render_image(entity_id, device, service, hass):
     color_type = device.color_type
-    
+
     # Deduplicate palette colors while preserving order
     palette = []
     for val in get_palette(color_type).values():
@@ -73,11 +73,15 @@ def render_image(entity_id, device, service, hass):
 
     bg_name = service.data.get("background", "black")
     payload = service.data.get("payload", "")
-    
+
     # Preprocess icon values to support weather icon mapping
     if isinstance(payload, list):
         for element in payload:
-            if isinstance(element, dict) and element.get("type") == "icon" and "value" in element:
+            if (
+                isinstance(element, dict)
+                and element.get("type") == "icon"
+                and "value" in element
+            ):
                 element["value"] = map_weather_icon(str(element["value"]))
 
     try:
@@ -86,7 +90,7 @@ def render_image(entity_id, device, service, hass):
             width=device.width,
             height=device.height,
             rotate=int(service.data.get("rotate", 0)),
-            rotate_mode="canvas",   # fixed resolution LED sign panel
+            rotate_mode="canvas",  # fixed resolution LED sign panel
             background=bg_name,
             context=_make_context(hass, default_font="Galmuri14.ttf", palette=palette),
         )

@@ -6,7 +6,6 @@ import dataclasses
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -15,7 +14,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
@@ -73,10 +72,7 @@ def _title(
     discovery_info: BluetoothServiceInfoBleak, device: BleLedSignBluetoothDeviceData
 ) -> str:
     return (
-        device.title
-        or device.get_device_name()
-        or discovery_info.name
-        or DEFAULT_NAME
+        device.title or device.get_device_name() or discovery_info.name or DEFAULT_NAME
     )
 
 
@@ -173,7 +169,7 @@ class BleLedSignConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class BleLedSignOptionsFlowHandler(OptionsFlowWithReload):
+class BleLedSignOptionsFlowHandler(OptionsFlow):
     """BLE LED Sign options flow."""
 
     async def async_step_init(

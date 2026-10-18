@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
-from .device import build_device_info, driver_supports, get_entry_driver
 from .const import (
     CONF_PASSWORD,
     CONF_WRITE_DELAY_MS,
@@ -23,6 +22,7 @@ from .const import (
     DOMAIN,
     MODES_1248,
 )
+from .device import build_device_info, driver_supports, get_entry_driver
 from .drivers import send_command
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,7 +119,9 @@ class BleLedSignDisplayModeSelect(RestoreEntity, SelectEntity):
         driver = get_entry_driver(hass, entry.entry_id)
         self._modes = dict(driver.display_modes) if driver else {}
         self._attr_options = list(self._modes)
-        self._attr_current_option = self._attr_options[0] if self._attr_options else None
+        self._attr_current_option = (
+            self._attr_options[0] if self._attr_options else None
+        )
 
     @property
     def device_info(self) -> DeviceInfo:

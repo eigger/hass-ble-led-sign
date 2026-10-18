@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from ...const import COLOR_TYPE_COLORFUL, COLOR_TYPE_SINGLE, COLOR_TYPE_SEVEN
+from ...const import COLOR_TYPE_COLORFUL, COLOR_TYPE_SEVEN, COLOR_TYPE_SINGLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,9 @@ def _nearest_color(
     return best
 
 
-def resolve_color(color: str | None, color_type: int) -> tuple[int, int, int, int] | None:
+def resolve_color(
+    color: str | None, color_type: int
+) -> tuple[int, int, int, int] | None:
     """Map a payload color name or hex to an RGBA value for the device palette."""
     if color is None:
         return None

@@ -228,7 +228,9 @@ def images_to_animation_bytes(
     return result
 
 
-def load_animated_images(path: str, columns: int, rows: int) -> tuple[list[Image.Image], int]:
+def load_animated_images(
+    path: str, columns: int, rows: int
+) -> tuple[list[Image.Image], int]:
     """Load GIF/APNG frames resized to the device resolution."""
     anim = Image.open(path)
     frame_count = getattr(anim, "n_frames", 1)
@@ -284,9 +286,7 @@ def parse_jt_file(path: str) -> tuple[int, list[int], int, int]:
     raise ValueError("JT file must contain graffitiData or aniData")
 
 
-def resolve_text_color(
-    color: str | None, color_type: int
-) -> tuple[int, int, int]:
+def resolve_text_color(color: str | None, color_type: int) -> tuple[int, int, int]:
     """Map a service color name to an RGB tuple for text rendering."""
     if not color:
         return (255, 255, 255)

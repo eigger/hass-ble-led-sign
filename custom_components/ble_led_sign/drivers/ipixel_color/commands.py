@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .protocol import build_frame
 from .const import (
     BRIGHTNESS_NATIVE_MAX,
     BRIGHTNESS_NATIVE_MIN,
@@ -53,6 +52,7 @@ from .const import (
     SUB_TEXT_SPEED,
     SUB_WEEK,
 )
+from .protocol import build_frame
 
 
 # --- power & brightness ------------------------------------------------------

@@ -17,8 +17,25 @@ from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+try:
+    from homeassistant.helpers.target import (
+        TargetSelection,
+    )
+    from homeassistant.helpers.target import (
+        async_extract_referenced_entity_ids as _async_extract_referenced_entity_ids,
+    )
+
+    def async_extract_referenced_entity_ids(hass: HomeAssistant, service: ServiceCall):
+        return _async_extract_referenced_entity_ids(hass, TargetSelection(service.data))
+
+except ImportError:
+    from homeassistant.helpers.service import async_extract_referenced_entity_ids
+
+
 from PIL import Image, ImageColor
 
 from .const import (
@@ -99,9 +116,7 @@ def process_service_info(
         )
 
 
-def _resolve_driver(
-    entry: BleLedSignConfigEntry, data: BleLedSignBluetoothDeviceData
-):
+def _resolve_driver(entry: BleLedSignConfigEntry, data: BleLedSignBluetoothDeviceData):
     """Resolve the driver for an entry from stored id or live advertisement."""
     driver_id = entry.data.get(CONF_DRIVER_ID)
     if not driver_id and data.device is not None:
@@ -139,8 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
         "data": data,
         "driver": driver,
         "countdown_minutes": 5,
-        "image_coordinator": DataUpdateCoordinator(hass, _LOGGER, name=f"{DOMAIN}_image"),
-        "preview_coordinator": DataUpdateCoordinator(hass, _LOGGER, name=f"{DOMAIN}_preview"),
+        "image_coordinator": DataUpdateCoordinator(
+            hass, _LOGGER, name=f"{DOMAIN}_image"
+        ),
+        "preview_coordinator": DataUpdateCoordinator(
+            hass, _LOGGER, name=f"{DOMAIN}_preview"
+        ),
     }
 
     device_registry = dr.async_get(hass)
@@ -190,19 +209,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
         await _run_for_devices(hass, service, _send_command_to_device)
 
     for service_name in SERVICE_NAMES:
-        handler = {
-            "write": write_service,
-            "send_text": send_text_service,
-            "send_image": send_image_service,
-            "send_animation": send_animation_service,
-            "send_jt": send_jt_service,
-            "set_icon": set_icon_service,
-            "set_music": set_music_service,
-            "send_command": send_command_service,
-        }[service_name]
-        hass.services.async_register(DOMAIN, service_name, handler)
+        if not hass.services.has_service(DOMAIN, service_name):
+            handler = {
+                "write": write_service,
+                "send_text": send_text_service,
+                "send_image": send_image_service,
+                "send_animation": send_animation_service,
+                "send_jt": send_jt_service,
+                "set_icon": set_icon_service,
+                "set_music": set_music_service,
+                "send_command": send_command_service,
+            }[service_name]
+            hass.services.async_register(DOMAIN, service_name, handler)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        try:
+            await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        except Exception as err:
+            _LOGGER.debug("Unable to roll back platforms: %s", err)
+        finally:
+            if DOMAIN in hass.data:
+                hass.data[DOMAIN].pop(entry.entry_id, None)
+                if not [k for k in hass.data[DOMAIN] if k != LOCK]:
+                    for service in SERVICE_NAMES:
+                        if hass.services.has_service(DOMAIN, service):
+                            hass.services.async_remove(DOMAIN, service)
+                    hass.data.pop(DOMAIN, None)
+        raise
+
     entry.async_on_unload(bt_coordinator.async_start())
 
     # Some families (e.g. iPixel Color) don't advertise their panel size; read
@@ -213,7 +249,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
             hass, _async_fetch_device_info(hass, entry), f"{DOMAIN}_fetch_info"
         )
 
+    # Register update listener to trigger reload on options change across all HA versions
+    # (since OptionsFlowWithReload is not available in HA 2025.1.0).
+    entry.async_on_unload(entry.add_update_listener(_async_update_options))
+
     return True
+
+
+async def _async_update_options(
+    hass: HomeAssistant, entry: BleLedSignConfigEntry
+) -> None:
+    """Reload integration when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_fetch_device_info(
@@ -245,21 +292,45 @@ async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and DOMAIN in hass.data:
         hass.data[DOMAIN].pop(entry.entry_id, None)
-    if unload_ok and len(hass.config_entries.async_entries(DOMAIN)) == 0:
-        for service in SERVICE_NAMES:
-            hass.services.async_remove(DOMAIN, service)
+        if not [k for k in hass.data[DOMAIN] if k != LOCK]:
+            for service in SERVICE_NAMES:
+                if hass.services.has_service(DOMAIN, service):
+                    hass.services.async_remove(DOMAIN, service)
+            hass.data.pop(DOMAIN, None)
     return unload_ok
 
 
-def _normalize_device_ids(service: ServiceCall) -> list[str]:
+def _normalize_device_ids(hass: HomeAssistant, service: ServiceCall) -> list[str]:
     # Home Assistant merges the service ``target`` (device_id/entity_id/area_id)
     # into ``service.data``; ServiceCall has no ``target`` attribute.
-    device_ids = service.data.get(ATTR_DEVICE_ID)
-    if isinstance(device_ids, str):
-        return [device_ids]
-    if device_ids:
-        return list(device_ids)
-    return []
+    device_ids: list[str] = []
+    raw_devices = service.data.get(ATTR_DEVICE_ID)
+    if isinstance(raw_devices, str):
+        device_ids.append(raw_devices)
+    elif raw_devices:
+        device_ids.extend(raw_devices)
+
+    referenced = async_extract_referenced_entity_ids(hass, service)
+    ent_reg = er.async_get(hass)
+
+    # Explicit entity targets require strict validation
+    for entity_id in referenced.referenced:
+        entry = ent_reg.async_get(entity_id)
+        if not entry or entry.platform != DOMAIN or not entry.device_id:
+            raise HomeAssistantError(
+                f"Entity {entity_id!r} is not a valid {DOMAIN} entity or has no device"
+            )
+        if entry.device_id not in device_ids:
+            device_ids.append(entry.device_id)
+
+    # Indirect entity targets (expanded from area, floor, label, device) are filtered
+    for entity_id in referenced.indirectly_referenced:
+        entry = ent_reg.async_get(entity_id)
+        if entry and entry.platform == DOMAIN and entry.device_id:
+            if entry.device_id not in device_ids:
+                device_ids.append(entry.device_id)
+
+    return device_ids
 
 
 async def _run_for_devices(
@@ -267,7 +338,7 @@ async def _run_for_devices(
     service: ServiceCall,
     callback,
 ) -> None:
-    device_ids = _normalize_device_ids(service)
+    device_ids = _normalize_device_ids(hass, service)
     if not device_ids:
         raise HomeAssistantError("device_id is required")
 
@@ -282,9 +353,7 @@ def _get_entry_id_from_device(hass: HomeAssistant, device_id: str) -> str:
             continue
         if isinstance(runtime, dict) and runtime.get("device_id") == device_id:
             return entry_id
-    raise HomeAssistantError(
-        f"No BLE LED Sign entry found for device_id {device_id!r}"
-    )
+    raise HomeAssistantError(f"No BLE LED Sign entry found for device_id {device_id!r}")
 
 
 def _get_options(hass: HomeAssistant, entry_id: str) -> dict[str, Any]:

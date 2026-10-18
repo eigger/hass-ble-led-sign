@@ -7,6 +7,4 @@ from homeassistant.config_entries import ConfigEntry
 if TYPE_CHECKING:
     from .coordinator import BleLedSignPassiveBluetoothProcessorCoordinator
 
-type BleLedSignConfigEntry = ConfigEntry[
-    BleLedSignPassiveBluetoothProcessorCoordinator
-]
+type BleLedSignConfigEntry = ConfigEntry[BleLedSignPassiveBluetoothProcessorCoordinator]

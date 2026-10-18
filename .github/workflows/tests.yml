@@ -1,48 +1,37 @@
 name: Tests
-
 on:
   push:
     branches: [main, master]
   pull_request:
-
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1"
+permissions:
+  contents: read
 concurrency:
-  group: tests-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.13", "3.14"]
-    steps:
-      - uses: actions/checkout@v6
-      
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pytest
-          python -c "import json; print('\n'.join(json.load(open('custom_components/ble_led_sign/manifest.json'))['requirements']))" > requirements.txt
-          pip install -r requirements.txt
-          # Exercise the minimum imagespec version declared by the manifest.
-          IMAGESPEC_MIN_VERSION="$(python - <<'PY'
-          import json
-          requirements = json.load(open("custom_components/ble_led_sign/manifest.json"))["requirements"]
-          requirement = next(req for req in requirements if req.startswith("imagespec[datamatrix]"))
-          operator, version = requirement.rsplit(">=", 1)
-          assert operator == "imagespec[datamatrix]", requirement
-          print(version)
-          PY
-          )"
-          pip install --force-reinstall "imagespec[datamatrix]==${IMAGESPEC_MIN_VERSION}"
-          IMAGESPEC_MIN_VERSION="$IMAGESPEC_MIN_VERSION" python -c "from importlib.metadata import version; import os; assert version('imagespec') == os.environ['IMAGESPEC_MIN_VERSION']"
-          
-      - name: Run tests
-        run: |
-          python -m pytest tests/
+  current:
+    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
+    with:
+      domain: ble_led_sign
+      python-versions: '["3.14"]'
+      lint-python-version: '3.14'
+      requirements: requirements_test.txt
+      expected-ha-version: '2026.10.2'
+      test-profile: ha
+      ha-components: 'bluetooth recorder image light number select switch button text'
+      dependency-modes: '["current", "minimum"]'
+      minimum-packages: '["imagespec"]'
+  minimum-ha:
+    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
+    with:
+      domain: ble_led_sign
+      python-versions: '["3.13"]'
+      requirements: requirements_test_min.txt
+      expected-ha-version: '2025.1.0'
+      test-profile: ha
+      ha-components: 'bluetooth recorder image light number select switch button text'
+      dependency-modes: '["current", "minimum"]'
+      minimum-packages: '["imagespec"]'

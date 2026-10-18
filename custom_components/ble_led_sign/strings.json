@@ -36,8 +36,7 @@
       "fields": {
         "text": {
           "name": "Text",
-          "description": "Text to display on the sign.",
-          "required": true
+          "description": "Text to display on the sign."
         },
         "color": {
           "name": "Color",
@@ -75,8 +74,7 @@
       "fields": {
         "image_path": {
           "name": "Image Path",
-          "description": "Local image file path to render on the sign.",
-          "required": true
+          "description": "Local image file path to render on the sign."
         },
         "threshold": {
           "name": "Threshold",
@@ -98,8 +96,7 @@
       "fields": {
         "image_path": {
           "name": "Animation Path",
-          "description": "Local animated GIF file path.",
-          "required": true
+          "description": "Local animated GIF file path."
         },
         "speed_ms": {
           "name": "Frame Speed",
@@ -125,8 +122,7 @@
       "fields": {
         "jt_path": {
           "name": "JT File Path",
-          "description": "Local JT program file path.",
-          "required": true
+          "description": "Local JT program file path."
         }
       }
     },
@@ -136,8 +132,7 @@
       "fields": {
         "icon_id": {
           "name": "Icon ID",
-          "description": "Built-in icon identifier (0–255).",
-          "required": true
+          "description": "Built-in icon identifier (0–255)."
         }
       }
     },
@@ -147,13 +142,11 @@
       "fields": {
         "heights": {
           "name": "Bar Heights",
-          "description": "Eight bar height values (0–255).",
-          "required": true
+          "description": "Eight bar height values (0–255)."
         },
         "colors": {
           "name": "Bar Colors",
-          "description": "Eight bar color indices (device-specific, typically 0–7).",
-          "required": true
+          "description": "Eight bar color indices (device-specific, typically 0–7)."
         }
       }
     },
@@ -163,27 +156,33 @@
       "fields": {
         "command": {
           "name": "Command",
-          "description": "Command name (e.g. clock, scoreboard, countdown, diy_mode, sport, eq).",
-          "required": true
+          "description": "Command name (e.g. clock, scoreboard, countdown, diy_mode, sport, eq)."
         },
         "value": {
           "name": "Value",
-          "description": "Optional argument(s): a single number, or a list for multi-argument commands (e.g. scoreboard: [3, 1]; clock: [mode, time_scale, show_date]).",
-          "required": false
+          "description": "Optional argument(s): a single number, or a list for multi-argument commands (e.g. scoreboard: [3, 1]; clock: [mode, time_scale, show_date])."
         }
       }
     }
   },
   "entity": {
     "light": {
-      "display": { "name": "Display Power" }
+      "display": {
+        "name": "Display Power"
+      }
     },
     "number": {
-      "speed": { "name": "Scroll Speed" },
-      "countdown_minutes": { "name": "Countdown Minutes" }
+      "speed": {
+        "name": "Scroll Speed"
+      },
+      "countdown_minutes": {
+        "name": "Countdown Minutes"
+      }
     },
     "select": {
-      "mode": { "name": "Scroll Mode" },
+      "mode": {
+        "name": "Scroll Mode"
+      },
       "display_mode": {
         "name": "Display Mode",
         "state": {
@@ -195,18 +194,30 @@
       }
     },
     "switch": {
-      "flip": { "name": "Flip Display" }
+      "flip": {
+        "name": "Flip Display"
+      }
     },
     "button": {
-      "clear": { "name": "Clear Display" },
-      "start_countdown": { "name": "Start Countdown" }
+      "clear": {
+        "name": "Clear Display"
+      },
+      "start_countdown": {
+        "name": "Start Countdown"
+      }
     },
     "text": {
-      "display_text": { "name": "Scroll Text" }
+      "display_text": {
+        "name": "Scroll Text"
+      }
     },
     "image": {
-      "last_updated_content": { "name": "Last Sent Display" },
-      "preview_content": { "name": "Render Preview" }
+      "last_updated_content": {
+        "name": "Last Sent Display"
+      },
+      "preview_content": {
+        "name": "Render Preview"
+      }
     }
   },
   "config": {

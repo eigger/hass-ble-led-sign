@@ -21,6 +21,7 @@ from ...const import (
     RESPONSE_TIMEOUT_S,
     UUID_CHAR,
 )
+from ..base import DeviceEntry
 from .commands import (
     cmd_begin_transfer,
     cmd_brightness,
@@ -31,7 +32,6 @@ from .commands import (
     cmd_speed,
     cmd_switch,
 )
-from ..base import DeviceEntry
 from .protocol import parse_response
 from .text import (
     build_animation_frames,
@@ -161,7 +161,9 @@ class CoolledClient:
             build_animation_frames(frame_data, frame_count, speed_ms)
         )
 
-    async def send_payload_transfer(self, command: int, payload_body: list[int]) -> None:
+    async def send_payload_transfer(
+        self, command: int, payload_body: list[int]
+    ) -> None:
         await self._write(cmd_begin_transfer())
         await self._send_chunked_transfer(build_chunked_frames(command, payload_body))
 
@@ -236,9 +238,7 @@ async def send_command(
         else:
             raise ValueError(f"Unknown command: {command}")
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def send_text(
@@ -252,9 +252,7 @@ async def send_text(
     async def _action(client: CoolledClient) -> None:
         await client.send_text(text, text_color=text_color)
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def send_image(
@@ -277,9 +275,7 @@ async def send_image(
         )
         await client.send_draw(bitmap)
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def send_animation(
@@ -310,9 +306,7 @@ async def send_animation(
             speed_ms if speed_ms is not None else detected_speed,
         )
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def send_jt(
@@ -326,9 +320,7 @@ async def send_jt(
         command, payload_body, _, _ = parse_jt_file(jt_path)
         await client.send_payload_transfer(command, payload_body)
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def send_music(
@@ -342,9 +334,7 @@ async def send_music(
     async def _action(client: CoolledClient) -> None:
         await client.set_music_bars(heights, colors)
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)
 
 
 async def set_icon(
@@ -357,6 +347,4 @@ async def set_icon(
     async def _action(client: CoolledClient) -> None:
         await client.send_icon(icon_id)
 
-    return await _with_client(
-        ble_device, device, password, write_delay_ms, _action
-    )
+    return await _with_client(ble_device, device, password, write_delay_ms, _action)

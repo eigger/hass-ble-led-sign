@@ -10,7 +10,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 from propcache.api import cached_property
 
@@ -37,7 +40,9 @@ async def async_setup_entry(
     )
 
 
-class BleLedSignImageEntity(CoordinatorEntity[DataUpdateCoordinator[bytes | None]], ImageEntity):
+class BleLedSignImageEntity(
+    CoordinatorEntity[DataUpdateCoordinator[bytes | None]], ImageEntity
+):
     """Last image successfully sent to the device."""
 
     _attr_has_entity_name = True
@@ -71,7 +76,9 @@ class BleLedSignImageEntity(CoordinatorEntity[DataUpdateCoordinator[bytes | None
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._cached_image = Image(content_type="image/png", content=self.coordinator.data)
+        self._cached_image = Image(
+            content_type="image/png", content=self.coordinator.data
+        )
         self._attr_image_last_updated = dt_util.now()
         super()._handle_coordinator_update()
 
@@ -113,6 +120,8 @@ class BleLedSignPreviewImageEntity(
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._cached_image = Image(content_type="image/png", content=self.coordinator.data)
+        self._cached_image = Image(
+            content_type="image/png", content=self.coordinator.data
+        )
         self._attr_image_last_updated = dt_util.now()
         super()._handle_coordinator_update()

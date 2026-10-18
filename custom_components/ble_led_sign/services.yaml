@@ -1,6 +1,6 @@
 write:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     payload:
@@ -68,7 +68,7 @@ write:
 
 send_text:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     text:
@@ -126,7 +126,7 @@ send_text:
 
 send_image:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     image_path:
@@ -158,7 +158,7 @@ send_image:
 
 send_animation:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     image_path:
@@ -199,7 +199,7 @@ send_animation:
 
 send_jt:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     jt_path:
@@ -210,7 +210,7 @@ send_jt:
 
 set_icon:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     icon_id:
@@ -224,7 +224,7 @@ set_icon:
 
 set_music:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     heights:
@@ -240,7 +240,7 @@ set_music:
 
 send_command:
   target:
-    device:
+    entity:
       integration: ble_led_sign
   fields:
     command:
