@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from propcache.api import cached_property
 
-from .device import build_device_info, driver_supports
 from .const import (
     CONF_PASSWORD,
     CONF_RETRY_COUNT,
@@ -24,6 +23,7 @@ from .const import (
     DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
 )
+from .device import build_device_info, driver_supports
 from .drivers import send_text
 
 _LOGGER = logging.getLogger(__name__)

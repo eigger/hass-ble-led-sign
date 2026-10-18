@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
-from .device import build_device_info, driver_supports, get_entry_driver
 from .const import (
     BRIGHTNESS_MAX,
     BRIGHTNESS_MIN,
@@ -31,6 +30,7 @@ from .const import (
     DOMAIN,
     MODES_1248,
 )
+from .device import build_device_info, driver_supports, get_entry_driver
 from .drivers import send_command
 
 _LOGGER = logging.getLogger(__name__)

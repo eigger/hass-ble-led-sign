@@ -15,18 +15,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
-from .device import build_device_info, driver_supports
 from .const import (
     CONF_PASSWORD,
-    CONF_RETRY_COUNT,
     CONF_WRITE_DELAY_MS,
     DEFAULT_PASSWORD,
-    DEFAULT_RETRY_COUNT,
     DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
     SPEED_MAX,
     SPEED_MIN,
 )
+from .device import build_device_info, driver_supports
 from .drivers import send_command
 
 _LOGGER = logging.getLogger(__name__)

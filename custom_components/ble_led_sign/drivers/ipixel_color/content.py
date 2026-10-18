@@ -190,7 +190,9 @@ def encode_text_payload(
         if count >= 255:
             break
 
-    properties = bytes([0x00, 0x01, 0x01, animation & 0xFF, speed & 0xFF, rainbow & 0xFF])
+    properties = bytes(
+        [0x00, 0x01, 0x01, animation & 0xFF, speed & 0xFF, rainbow & 0xFF]
+    )
     properties += color_bytes
     if bg_color is not None:
         properties += bytes([0x01]) + bytes(bg_color)

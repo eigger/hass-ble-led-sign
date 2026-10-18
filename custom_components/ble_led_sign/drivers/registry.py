@@ -15,7 +15,9 @@ DRIVERS: tuple[type[BaseLedDriver], ...] = (
     IpixelColorDriver,
 )
 
-_BY_ID: dict[str, type[BaseLedDriver]] = {driver.driver_id: driver for driver in DRIVERS}
+_BY_ID: dict[str, type[BaseLedDriver]] = {
+    driver.driver_id: driver for driver in DRIVERS
+}
 _INSTANCES: dict[str, BaseLedDriver] = {}
 
 
