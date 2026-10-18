@@ -31,6 +31,14 @@ async def test_bluetooth_discovery_flow(
         context={"source": SOURCE_BLUETOOTH},
         data=advertisement,
     )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] == "already_in_progress"
+    ):
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(progress) == 1
+        result = await hass.config_entries.flow.async_configure(progress[0]["flow_id"])
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
