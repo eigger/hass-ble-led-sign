@@ -49,7 +49,7 @@
 | TEST-09 | 실제 loader·config entry manager로 setup/플랫폼 로딩, HA 상태·registry·service/action으로 결과 검증 | PASS | 실제 `hass.config_entries.async_setup`, `async_forward_entry_setups` 및 `hass.services.async_call`로 검증. |
 | TEST-01, TEST-06, TEST-07 | 구현 기능별 성공·실패·중복·migration·unload·복구 회귀 검증, 외부 통신 경계만 mock, skip 사유 | PASS | Bluetooth discovery, config flow, entities, drivers, services, dry_run, validation error 회귀 검증. BleakTransport GATT 통신 경계만 mock. |
 | TEST-04, HACS-01 | 변경 전 지원 최소·current·각 Python/플러그인 분리, 선언한 정확한 최소 검증, 상향 시 비호환 근거·명시적 승인 확인 | PASS | Current(3.14 / HA 2026.10.2) 및 Min(3.13 / HA 2025.1.0) 가상환경에서 38개 테스트 모두 100% 통과. |
-| TEST-05, HA-10, DEP-02, DEP-05 | imagespec·blesession 등 최소/현재 라이브러리 별도 환경, 실제 HA 테스트·정확한 설치값·API 경계 검증 | PASS | `imagespec>=0.3.3`, `homeassistant-bluetooth>=1.13.0` 연동 및 렌더러 테스트 검증 완료. |
+| TEST-05, HA-10, DEP-02, DEP-05 | imagespec·blesession 등 최소/현재 라이브러리 별도 환경, 실제 HA 테스트·정확한 설치값·API 경계 검증 | PASS | `imagespec[datamatrix]>=1.1.0` 연동 및 렌더러 테스트 검증 완료. |
 | DEP-01, DEP-06 | Python runtime은 manifest requirements, HA domain은 dependencies/after_dependencies, 테스트·린트 requirements는 별도 | PASS | `manifest.json`, `requirements_test.txt`, `requirements_test_min.txt`, `requirements_lint.txt` 분리. |
 | DEP-07, CI-06 | 실제 사용하는 HA 구성요소의 requirements·필수 재귀 의존성·선택 로딩 경로 설치, resolver·`pip check` 통과 | PASS | `.venv` 및 `.venv-min`에서 `uv pip check` 충돌 없음 확인 완료. |
 | DEP-02, DEP-03, DEP-08 | 의존성 추가/변경의 버전·extras·marker·선언 위치·지원 플랫폼·라이선스 검토, 실제 HA 테스트와 문서 갱신 | PASS | 추가 의존성 검토 완료 (Apache-2.0 / MIT / LGPL 호환). |
@@ -58,9 +58,9 @@
 
 | 검증 축 / 상태 | 통합 커밋 | Python / HA / 플러그인 실제 버전 | 대상 패키지 실제 버전·extras·marker | 명령·테스트 결과·pip check / CI run·job | skip·제외·미검증 범위 |
 |---|---|---|---|---|---|
-| 현재 환경 / PASS | adopt-shared-standards | Python 3.14.5 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 | imagespec 0.3.3, homeassistant-bluetooth 1.13.0 | pytest 38 passed in 3.42s, uv pip check passed | 없음 (0 skipped) |
-| 정확한 최소 HA / PASS | adopt-shared-standards | Python 3.13.14 / HA 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 | imagespec 0.3.3, homeassistant-bluetooth 1.13.0 | pytest 38 passed in 4.09s, uv pip check passed | 없음 (0 skipped) |
-| 정확한 최소 라이브러리 / PASS | adopt-shared-standards | Python 3.13.14 / HA 2025.1.0 | imagespec 0.3.3 | test_renderer.py 6 passed | 없음 (0 skipped) |
+| 현재 환경 / PASS | adopt-shared-standards | Python 3.14.5 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 | imagespec 1.1.0 | pytest 38 passed in 3.42s, uv pip check passed | 없음 (0 skipped) |
+| 정확한 최소 HA / PASS | adopt-shared-standards | Python 3.13.14 / HA 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 | imagespec 1.1.0 | pytest 38 passed in 4.09s, uv pip check passed | 없음 (0 skipped) |
+| 정확한 최소 라이브러리 / PASS | adopt-shared-standards | Python 3.13.14 / HA 2025.1.0 | imagespec 1.1.0 | tests/components/ble_led_sign/test_renderer.py 6 passed | 없음 (0 skipped) |
 
 ## HACS·CI·의존성 업데이트
 

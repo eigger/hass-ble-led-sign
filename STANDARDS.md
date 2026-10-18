@@ -14,7 +14,7 @@
 - 적용 후 지원 최소 HA: 2025.1.0 (기존 지원 최소 보존)
 - current HA 테스트 환경: Python 3.14.5 / Home Assistant 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 (38 passed)
 - 최소 HA 검증 환경: Python 3.13.14 / Home Assistant 2025.1.0 / pytest-homeassistant-custom-component 0.13.201 (38 passed)
-- 최소 package 검증: imagespec==0.3.3, homeassistant-bluetooth==1.13.0
+- 최소 package 검증: imagespec==1.1.0
 - 예외: 없음
 
 ## 예외
