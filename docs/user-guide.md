@@ -78,6 +78,9 @@ The `ble_led_sign.write` action renders layouts using [imagespec](https://github
 
 ## Service Reference
 
+> [!TIP]
+> **Targeting Options**: In line with Home Assistant standards and UI picker requirements, services target entities by default (e.g. `entity_id: light.ble_led_sign_display_power`), or areas/floors/labels. For backward compatibility with existing automations, `device_id` remains fully supported in YAML and script actions.
+
 ### `ble_led_sign.write`
 
 Render declarative layout elements and send the bitmap to the sign.

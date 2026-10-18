@@ -200,13 +200,89 @@ async def test_service_target_entity_id(
     transport: BleakTransport,
 ) -> None:
     """Test calling service targeting entity_id resolves correctly to entry."""
+    from homeassistant.helpers import entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, loaded_entry.entry_id)
+    sign_entity = next(e for e in entries if e.domain == "light")
+
     transport.clear()
     await hass.services.async_call(
         DOMAIN,
         "send_text",
         {
-            "entity_id": "light.ble_led_sign_ccddeeff_display_power",
+            "entity_id": sign_entity.entity_id,
             "text": "Hello Entity",
+        },
+        blocking=True,
+    )
+    assert len(transport.writes) > 0
+
+
+async def test_service_target_mixed_area(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    transport: BleakTransport,
+) -> None:
+    """Test calling service targeting an area with mixed entities only targets ble_led_sign."""
+    from homeassistant.helpers import area_registry as ar
+    from homeassistant.helpers import entity_registry as er
+
+    area_reg = ar.async_get(hass)
+    area = area_reg.async_create("living_room")
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, loaded_entry.entry_id)
+    sign_entity = next(e for e in entries if e.domain == "light")
+    ent_reg.async_update_entity(sign_entity.entity_id, area_id=area.id)
+
+    # Add an unrelated entity from another integration to the same area
+    unrelated = ent_reg.async_get_or_create(
+        domain="light",
+        platform="other_domain",
+        unique_id="other_x1",
+    )
+    ent_reg.async_update_entity(unrelated.entity_id, area_id=area.id)
+
+    transport.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_text",
+        {
+            "area_id": area.id,
+            "text": "Area Message",
+        },
+        blocking=True,
+    )
+    assert len(transport.writes) > 0
+
+
+async def test_service_target_group(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    transport: BleakTransport,
+) -> None:
+    """Test calling service targeting a group expands correctly."""
+    from homeassistant.const import ATTR_ENTITY_ID
+    from homeassistant.helpers import entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, loaded_entry.entry_id)
+    sign_entity = next(e for e in entries if e.domain == "light")
+
+    hass.states.async_set(
+        "group.signs",
+        "on",
+        {ATTR_ENTITY_ID: [sign_entity.entity_id]},
+    )
+
+    transport.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_text",
+        {
+            "entity_id": "group.signs",
+            "text": "Group Message",
         },
         blocking=True,
     )

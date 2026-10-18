@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -22,8 +22,6 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 try:
-    from homeassistant.helpers.service import async_extract_referenced_entity_ids
-except ImportError:
     from homeassistant.helpers.target import (
         TargetSelection,
     )
@@ -33,6 +31,9 @@ except ImportError:
 
     def async_extract_referenced_entity_ids(hass: HomeAssistant, service: ServiceCall):
         return _async_extract_referenced_entity_ids(hass, TargetSelection(service.data))
+
+except ImportError:
+    from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 
 from PIL import Image, ImageColor
@@ -310,24 +311,22 @@ def _normalize_device_ids(hass: HomeAssistant, service: ServiceCall) -> list[str
         device_ids.extend(raw_devices)
 
     referenced = async_extract_referenced_entity_ids(hass, service)
-    targeted_entities = set(referenced.referenced) | set(
-        referenced.indirectly_referenced
-    )
+    ent_reg = er.async_get(hass)
 
-    raw_entities = service.data.get(ATTR_ENTITY_ID)
-    if isinstance(raw_entities, str):
-        targeted_entities.add(raw_entities)
-    elif raw_entities:
-        targeted_entities.update(raw_entities)
+    # Explicit entity targets require strict validation
+    for entity_id in referenced.referenced:
+        entry = ent_reg.async_get(entity_id)
+        if not entry or entry.platform != DOMAIN or not entry.device_id:
+            raise HomeAssistantError(
+                f"Entity {entity_id!r} is not a valid {DOMAIN} entity or has no device"
+            )
+        if entry.device_id not in device_ids:
+            device_ids.append(entry.device_id)
 
-    if targeted_entities:
-        ent_reg = er.async_get(hass)
-        for entity_id in targeted_entities:
-            entry = ent_reg.async_get(entity_id)
-            if not entry or entry.platform != DOMAIN or not entry.device_id:
-                raise HomeAssistantError(
-                    f"Entity {entity_id!r} is not a valid {DOMAIN} entity or has no device"
-                )
+    # Indirect entity targets (expanded from area, floor, label, device) are filtered
+    for entity_id in referenced.indirectly_referenced:
+        entry = ent_reg.async_get(entity_id)
+        if entry and entry.platform == DOMAIN and entry.device_id:
             if entry.device_id not in device_ids:
                 device_ids.append(entry.device_id)
 

@@ -76,6 +76,9 @@ LED 전광판은 하드웨어에 따라 다음과 같은 색상 형식을 지원
 
 ## 서비스 예제
 
+> [!TIP]
+> **대상 지정 옵션**: Home Assistant 표준 및 UI 선택기 요구사항에 따라 기본적으로 엔티티(`entity_id: light.ble_led_sign_display_power`), 영역(area), 층(floor), 라벨(label)을 대상으로 지정합니다. 기존 자동화와의 하위 호환성을 위해 `device_id`도 YAML 및 스크립트에서 완벽히 지원됩니다.
+
 ### `ble_led_sign.write`
 
 레이아웃 요소를 렌더링하여 전광판에 비트맵으로 전송합니다.

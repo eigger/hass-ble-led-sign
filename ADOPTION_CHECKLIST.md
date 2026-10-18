@@ -8,7 +8,7 @@
 |---|---|
 | 통합 리포 / 실제 기본 브랜치 | eigger/hass-ble-led-sign / master |
 | domain / 구현 경로 | ble_led_sign / custom_components/ble_led_sign/ |
-| 검토 대상 통합 커밋 / 채택 PR | adopt-shared-standards 브랜치 |
+| 검토 대상 통합 커밋 / 채택 PR | PR #13 (`adopt-shared-standards`) |
 | 검토한 표준 전체 커밋 SHA | c3f2e254c0867f1825ca8f636c347582e06707db |
 | 검토일 / 조율 담당 | 2026-10-18 / root |
 | 구현 서브 에이전트 / 독립 리뷰·검증 서브 에이전트 | ble_led_sign_impl / ble_led_sign_review |
@@ -70,8 +70,8 @@
 | HACS-01, HACS-02 | 루트 README/LICENSE/hacs.json, 검증한 최소 HA, 실제 배포 구조와 필요한 옵션 일치 | PASS | `README.md`, `LICENSE`, `hacs.json` (`"homeassistant": "2025.1.0"`) 일치. 배포 구조 `custom_components/ble_led_sign` 정상. |
 | HACS-03, HACS-05 | Default 여부는 목록 근거로 확인, 로컬 brand/icon.png 또는 원격 brands 근거와 HACS/Hassfest 실제 실행, ignore는 이유·해제 조건 기록 | PASS | HACS Custom 유지 (`.hass-standards.json` "hacs": "custom"). |
 | HACS-06 (권장) | description·topics·issue 경로·brands 및 사용하는 HACS 필드 지원 확인 | PASS | 저장소 description, topics, issues, discussions 활성화 확인. |
-| CI-01, CI-02 | Validate/Python Tests 공통화, 확장 job 유지, PR·실제 기본 브랜치 push·dispatch 및 필요한 schedule | PASS | `.github/workflows/tests.yml`, `validate.yml`, `update_dependencies.yml` 표준 호출 구성. 이벤트: PR, push(master), workflow_dispatch. |
-| CI-03, CI-05, CI-08 | 최소 권한·checkout 자격증명 비보존·timeout·concurrency, full SHA·갱신 관리, 비신뢰 입력·secrets 경계 | PASS | `permissions: contents: read`, `persist-credentials: false`, `timeout-minutes: 15`, full SHA(`c3f2e254c0867f1825ca8f636c347582e06707db`) 고정. |
+| CI-01, CI-02 | Validate/Python Tests 공통화, 확장 job 유지, PR·실제 기본 브랜치 push·dispatch 및 필요한 schedule | PASS | `.github/workflows/tests.yml`, `validate.yml`, `update_dependencies.yml` 표준 호출 구성. 이벤트: PR, push(master), workflow_dispatch, schedule. |
+| CI-03, CI-05, CI-08 | 최소 권한·checkout 자격증명 비보존·timeout·concurrency, full SHA·갱신 관리, 비신뢰 입력·secrets 경계 | PASS | `permissions: contents: read`, `persist-credentials: false`, full SHA(`c3f2e254c0867f1825ca8f636c347582e06707db`) 고정. 공용 workflow 내 lint 10m, test 20m timeout 적용. |
 | CI-04, CI-07, CI-12 | 실패를 숨기지 않는 실제 `ha` 필수 테스트, 버전별 환경·cache·Ruff 설정과 required checks 이름 확인 | PASS | `test-profile: ha`, ruff 0.17.1 린트/포맷 설정. |
 | DEP-03, DEP-04, CI-09 | updater의 선택 package·연산자/extras/marker 보존, 안정 버전·major 정책, 실제 기본 브랜치·단일 bot branch·PR만 제안 | PASS | `.github/workflows/update_dependencies.yml` 공통 워크플로우 호출 설정. |
 | CI-09, CI-10, DEP-08 | 변경 tree의 새 하한·실제 HA 검증 후 PR 동기화, 실패 시 중단·변경 없음 시 기존 PR 정리, 후속 required checks 충족 방식 확인 | PASS | validation-command로 `tests/components/ble_led_sign` 지정. |

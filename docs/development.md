@@ -37,10 +37,13 @@ uv pip check
 ```bash
 uv venv .venv-min --python 3.13
 source .venv-min/bin/activate
-uv pip install --prerelease=allow -r requirements_test_min.txt -r requirements_lint.txt "imagespec[datamatrix]>=1.1.0"
+uv pip install --prerelease=allow -r requirements_test_min.txt -r requirements_lint.txt "imagespec[datamatrix]==1.1.0"
 pytest tests/components/ble_led_sign/ -v
 uv pip check
 ```
+
+> [!NOTE]
+> `--prerelease=allow` is needed in the minimum HA 2025.1.0 environment to resolve transitive dependencies correctly with modern `uv`. Specifying `imagespec[datamatrix]==1.1.0` tests the exact declared lower-bound library version.
 
 ### Linting and Formatting
 
