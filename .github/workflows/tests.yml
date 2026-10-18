@@ -29,7 +29,6 @@ jobs:
     with:
       domain: ble_led_sign
       python-versions: '["3.13"]'
-      lint-python-version: '3.14'
       requirements: requirements_test_min.txt
       expected-ha-version: '2025.1.0'
       test-profile: ha

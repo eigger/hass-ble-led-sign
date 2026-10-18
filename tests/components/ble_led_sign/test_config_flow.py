@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from time import monotonic
 from unittest.mock import patch
 
+from bleak.backends.scanner import AdvertisementData
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
@@ -19,26 +21,28 @@ from custom_components.ble_led_sign.const import (
     DOMAIN,
 )
 
-from .conftest import COOLLED_ADDRESS
+from .conftest import COOLLED_ADDRESS, COOLLED_NAME, _make_ble_device
 
 
 async def test_bluetooth_discovery_flow(
-    hass: HomeAssistant, advertisement: BluetoothServiceInfoBleak
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    coolled_advertisement_data: AdvertisementData,
 ) -> None:
-    """Test discovering a device over Bluetooth and confirming setup."""
+    """Test discovering a device directly over Bluetooth and confirming setup."""
+    device = _make_ble_device(COOLLED_ADDRESS, COOLLED_NAME)
+    info = BluetoothServiceInfoBleak.from_scan(
+        "00:00:00:00:00:01",
+        device,
+        coolled_advertisement_data,
+        monotonic(),
+        True,
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=advertisement,
+        data=info,
     )
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] == "already_in_progress"
-    ):
-        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-        assert len(progress) == 1
-        result = await hass.config_entries.flow.async_configure(progress[0]["flow_id"])
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
@@ -55,6 +59,29 @@ async def test_bluetooth_discovery_flow(
     assert result2["result"].unique_id == COOLLED_ADDRESS
     assert result2["result"].data.get(CONF_DRIVER_ID) == "coolled"
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_in_progress(
+    hass: HomeAssistant,
+    advertisement: BluetoothServiceInfoBleak,
+) -> None:
+    """Test discovering an in-progress flow aborts with already_in_progress."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=advertisement,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Second discovery initiation for the same device while first flow is open
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=advertisement,
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -140,20 +167,24 @@ async def test_options_flow(
     hass: HomeAssistant,
     loaded_entry: MockConfigEntry,
 ) -> None:
-    """Test updating integration options."""
+    """Test updating integration options triggers reload listener."""
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_PASSWORD: "123456",
-            CONF_RETRY_COUNT: 5,
-            CONF_WRITE_DELAY_MS: 30,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as mock_reload:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PASSWORD: "123456",
+                CONF_RETRY_COUNT: 5,
+                CONF_WRITE_DELAY_MS: 30,
+            },
+        )
+        await hass.async_block_till_done()
+        assert len(mock_reload.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert loaded_entry.options[CONF_PASSWORD] == "123456"

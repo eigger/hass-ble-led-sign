@@ -63,12 +63,18 @@ target:
   device_id: <your_device_id>
 data:
   payload:
-    - icon:
-        name: weather-sunny
-        color: yellow
-    - text:
-        content: " Hello Home Assistant!"
-        color: cyan
+    - type: text
+      value: "Hello HA"
+      x: 2
+      y: 1
+      size: 10
+      color: cyan
+    - type: icon
+      value: "weather-sunny"
+      x: 36
+      y: 1
+      size: 10
+      color: yellow
 ```
 
 For more examples, animations, and image rendering syntax, refer to the [User Guide](docs/user-guide.md).

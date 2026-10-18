@@ -13,10 +13,10 @@ This integration is distributed as a HACS custom integration via `custom_compone
 
 ## Support Baselines and Current Testing
 
-| Scope | Python | Home Assistant | pytest-homeassistant-custom-component | Declaration |
-|---|---|---|---|---|
-| Historical Support Baseline | 3.13 | 2025.1.0 | 0.13.201 | `hacs.json`, `requirements_test_min.txt` |
-| Current Testing Target | 3.14 | 2026.10.2 | 0.13.373 | `requirements_test.txt` |
+| Scope | Local Python | Remote CI Python | Home Assistant | pytest-homeassistant-custom-component | Declaration |
+|---|---|---|---|---|---|
+| Historical Support Baseline | 3.13.14 | 3.13.16 | 2025.1.0 | 0.13.201 | `hacs.json`, `requirements_test_min.txt` |
+| Current Testing Target | 3.14.5 | 3.14.8 | 2026.10.2 | 0.13.373 | `requirements_test.txt` |
 
 The historical minimum support baseline (`2025.1.0`) is preserved and separated from the current testing target. `requirements_test_min.txt` is excluded from automated dependency updates to prevent accidental version drift.
 
@@ -27,7 +27,7 @@ The historical minimum support baseline (`2025.1.0`) is preserved and separated 
 ```bash
 uv venv .venv --python 3.14
 source .venv/bin/activate
-uv pip install -r requirements_test.txt -r requirements_lint.txt "pillow>=10.0.0" "imagespec[datamatrix]>=1.1.0" "requests>=2.31.0"
+uv pip install -r requirements_test.txt -r requirements_lint.txt "imagespec[datamatrix]>=1.1.0"
 pytest tests/components/ble_led_sign/ -v
 uv pip check
 ```
@@ -37,7 +37,7 @@ uv pip check
 ```bash
 uv venv .venv-min --python 3.13
 source .venv-min/bin/activate
-uv pip install --prerelease=allow -r requirements_test_min.txt -r requirements_lint.txt "pillow>=10.0.0" "imagespec[datamatrix]>=1.1.0" "requests>=2.31.0"
+uv pip install --prerelease=allow -r requirements_test_min.txt -r requirements_lint.txt "imagespec[datamatrix]>=1.1.0"
 pytest tests/components/ble_led_sign/ -v
 uv pip check
 ```
@@ -52,6 +52,6 @@ ruff format --check .
 
 ## Dependencies & Manifest
 
-- Runtime dependencies are declared in `manifest.json` (`pillow>=10.0.0`, `imagespec[datamatrix]>=1.1.0`, `requests>=2.31.0`).
+- Integration runtime dependencies are declared in `manifest.json` (`imagespec[datamatrix]>=1.1.0`). Core-provided libraries (`pillow` and `requests`) are not declared as integration requirements per Home Assistant architectural standards.
 - Home Assistant integration dependencies (`bluetooth_adapters`) and after-dependencies (`recorder`) are declared explicitly.
 - Testing and linting tools are declared in dedicated `requirements_*.txt` files.

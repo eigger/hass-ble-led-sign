@@ -2,6 +2,7 @@ write:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     payload:
       required: true
@@ -70,6 +71,7 @@ send_text:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     text:
       required: true
@@ -128,6 +130,7 @@ send_image:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     image_path:
       required: true
@@ -160,6 +163,7 @@ send_animation:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     image_path:
       required: true
@@ -201,6 +205,7 @@ send_jt:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     jt_path:
       required: true
@@ -212,6 +217,7 @@ set_icon:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     icon_id:
       required: true
@@ -226,6 +232,7 @@ set_music:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     heights:
       required: true
@@ -242,6 +249,7 @@ send_command:
   target:
     entity:
       integration: ble_led_sign
+    device:
   fields:
     command:
       required: true

@@ -63,12 +63,18 @@ target:
   device_id: <기기_ID>
 data:
   payload:
-    - icon:
-        name: weather-sunny
-        color: yellow
-    - text:
-        content: " 안녕하세요 Home Assistant!"
-        color: cyan
+    - type: text
+      value: "Hello HA"
+      x: 2
+      y: 1
+      size: 10
+      color: cyan
+    - type: icon
+      value: "weather-sunny"
+      x: 36
+      y: 1
+      size: 10
+      color: yellow
 ```
 
 다양한 애니메이션, 이미지 렌더링 문법 및 예제는 [사용자 가이드](docs/ko/user-guide.md)를 참고하세요.

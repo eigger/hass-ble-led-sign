@@ -192,3 +192,60 @@ async def test_service_unknown_device_id_raises(
             {"device_id": "nonexistent_device_id", "text": "Test"},
             blocking=True,
         )
+
+
+async def test_service_target_entity_id(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    transport: BleakTransport,
+) -> None:
+    """Test calling service targeting entity_id resolves correctly to entry."""
+    transport.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_text",
+        {
+            "entity_id": "light.ble_led_sign_ccddeeff_display_power",
+            "text": "Hello Entity",
+        },
+        blocking=True,
+    )
+    assert len(transport.writes) > 0
+
+
+async def test_service_target_invalid_entity_id_raises(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Test calling service targeting an invalid or other integration entity raises HomeAssistantError."""
+    # Nonexistent entity
+    with pytest.raises(HomeAssistantError, match="not a valid ble_led_sign entity"):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text",
+            {
+                "entity_id": "light.nonexistent_entity",
+                "text": "Test",
+            },
+            blocking=True,
+        )
+
+    # Entity from another integration
+    from homeassistant.helpers import entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    entry = ent_reg.async_get_or_create(
+        domain="light",
+        platform="other_domain",
+        unique_id="other_1234",
+    )
+    with pytest.raises(HomeAssistantError, match="not a valid ble_led_sign entity"):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text",
+            {
+                "entity_id": entry.entity_id,
+                "text": "Test",
+            },
+            blocking=True,
+        )

@@ -20,6 +20,21 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+try:
+    from homeassistant.helpers.service import async_extract_referenced_entity_ids
+except ImportError:
+    from homeassistant.helpers.target import (
+        TargetSelection,
+    )
+    from homeassistant.helpers.target import (
+        async_extract_referenced_entity_ids as _async_extract_referenced_entity_ids,
+    )
+
+    def async_extract_referenced_entity_ids(hass: HomeAssistant, service: ServiceCall):
+        return _async_extract_referenced_entity_ids(hass, TargetSelection(service.data))
+
+
 from PIL import Image, ImageColor
 
 from .const import (
@@ -208,7 +223,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except BaseException:
+    except Exception:
         try:
             await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
         except Exception as err:
@@ -233,6 +248,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
             hass, _async_fetch_device_info(hass, entry), f"{DOMAIN}_fetch_info"
         )
 
+    # Register update listener to trigger reload on options change across all HA versions
+    # (since OptionsFlowWithReload is not available in HA 2025.1.0).
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
 
     return True
@@ -292,18 +309,26 @@ def _normalize_device_ids(hass: HomeAssistant, service: ServiceCall) -> list[str
     elif raw_devices:
         device_ids.extend(raw_devices)
 
-    raw_entities = service.data.get(ATTR_ENTITY_ID)
-    entity_ids: list[str] = []
-    if isinstance(raw_entities, str):
-        entity_ids.append(raw_entities)
-    elif raw_entities:
-        entity_ids.extend(raw_entities)
+    referenced = async_extract_referenced_entity_ids(hass, service)
+    targeted_entities = set(referenced.referenced) | set(
+        referenced.indirectly_referenced
+    )
 
-    if entity_ids:
+    raw_entities = service.data.get(ATTR_ENTITY_ID)
+    if isinstance(raw_entities, str):
+        targeted_entities.add(raw_entities)
+    elif raw_entities:
+        targeted_entities.update(raw_entities)
+
+    if targeted_entities:
         ent_reg = er.async_get(hass)
-        for entity_id in entity_ids:
+        for entity_id in targeted_entities:
             entry = ent_reg.async_get(entity_id)
-            if entry and entry.device_id and entry.device_id not in device_ids:
+            if not entry or entry.platform != DOMAIN or not entry.device_id:
+                raise HomeAssistantError(
+                    f"Entity {entity_id!r} is not a valid {DOMAIN} entity or has no device"
+                )
+            if entry.device_id not in device_ids:
                 device_ids.append(entry.device_id)
 
     return device_ids

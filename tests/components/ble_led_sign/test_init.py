@@ -69,6 +69,9 @@ async def test_failed_platform_setup_rolls_back(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.entry_id not in hass.data.get(DOMAIN, {})
+    assert not hass.services.has_service(DOMAIN, "write")
+    assert not hass.services.has_service(DOMAIN, "send_text")
+    assert not hass.services.has_service(DOMAIN, "send_command")
 
 
 async def test_multi_entry_service_cleanup(
