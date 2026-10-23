@@ -24,3 +24,12 @@
 | 규칙 ID | 이유 | 담당자 | 재검토 조건 |
 |---|---|---|---|
 | 없음 | 해당 사항 없음 | - | - |
+
+- Reviewed release standards SHA: `fd4162c0b93fbe8e109f99c787773ae09ba157e1`
+
+
+## 2026-10-23 ZIP release and Downloads update
+
+Base commit: `44d51e0332362bce84c3520ebc9b685074f74f47`. HACS remains Custom. `hacs.json` now selects `ble_led_sign.zip`; publishing the next release builds and attaches that integration ZIP through the pinned central action. Analytics Usage is replaced by Downloads. The archive contains tracked integration files at its root. No existing release/tag/assets are modified.
+
+Implementation and review: root; generated release caller reuses the independently reviewed central ZIP contract. Support minimum, manifest, code, dependencies, README body and prior adoption exceptions are preserved. Verification evidence is recorded in ADOPTION_CHECKLIST.md; this scoped update does not establish full standards compliance.
