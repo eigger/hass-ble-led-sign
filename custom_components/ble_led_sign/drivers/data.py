@@ -32,7 +32,16 @@ class BleLedSignBluetoothDeviceData:
             return
 
         self.driver = driver
-        self.device = driver.parse(service_info)
+        parsed = driver.parse(service_info)
+        if (
+            self.device is not None
+            and self.device.driver_id == parsed.driver_id
+            and driver.requires_active_info
+        ):
+            # Keep the object that an in-flight active query is updating.
+            self.device.name = parsed.name
+            parsed = self.device
+        self.device = parsed
         identifier = service_info.address.replace(":", "")[-8:].upper()
         model = self.device.model if self.device else driver.name
         self.title = f"{identifier} ({model})"

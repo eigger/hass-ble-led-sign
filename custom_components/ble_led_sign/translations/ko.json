@@ -90,6 +90,29 @@
       "preview_content": {
         "name": "렌더링 미리보기"
       }
+    },
+    "sensor": {
+      "last_operation": {
+        "name": "마지막 통신",
+        "state": {
+          "success": "성공",
+          "failed": "실패"
+        }
+      },
+      "last_error": {
+        "name": "마지막 오류 단계"
+      },
+      "last_failure": {
+        "name": "마지막 실패"
+      },
+      "failure_count": {
+        "name": "실패 횟수"
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "BLE 연결"
+      }
     }
   },
   "services": {

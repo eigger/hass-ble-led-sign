@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,11 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
+from .ble import async_send
 from .const import (
-    CONF_PASSWORD,
-    CONF_WRITE_DELAY_MS,
-    DEFAULT_PASSWORD,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
     MODES_1248,
 )
@@ -71,27 +67,15 @@ class BleLedSignModeSelect(RestoreEntity, SelectEntity):
             raise HomeAssistantError(f"Unknown mode: {option}")
 
         mode = next(key for key, value in MODES_1248.items() if value == option)
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        data = self._hass.data[DOMAIN][self._entry_id]["data"]
-        device = data.device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        success = await send_command(
-            ble_device,
-            device,
-            options.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-            int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS)),
-            "mode",
-            mode,
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(
+                *args,
+                "mode",
+                mode,
+            ),
         )
-        if not success:
-            raise HomeAssistantError("Failed to set mode")
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -136,26 +120,15 @@ class BleLedSignDisplayModeSelect(RestoreEntity, SelectEntity):
             raise HomeAssistantError(f"Unknown display mode: {option}")
 
         command, value = self._modes[option]
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        device = self._hass.data[DOMAIN][self._entry_id]["data"].device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        success = await send_command(
-            ble_device,
-            device,
-            options.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-            int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS)),
-            command,
-            value,
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(
+                *args,
+                command,
+                value,
+            ),
         )
-        if not success:
-            raise HomeAssistantError(f"Failed to set display mode: {option}")
         self._attr_current_option = option
         self.async_write_ha_state()
 

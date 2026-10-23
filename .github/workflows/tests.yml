@@ -21,9 +21,9 @@ jobs:
       requirements: requirements_test.txt
       expected-ha-version: '2026.10.2'
       test-profile: ha
-      ha-components: 'bluetooth recorder image light number select switch button text'
+      ha-components: 'bluetooth recorder image light number select switch button text sensor binary_sensor'
       dependency-modes: '["current", "minimum"]'
-      minimum-packages: '["imagespec"]'
+      minimum-packages: '["imagespec", "blesession"]'
   minimum-ha:
     uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
     with:
@@ -32,6 +32,6 @@ jobs:
       requirements: requirements_test_min.txt
       expected-ha-version: '2025.1.0'
       test-profile: ha
-      ha-components: 'bluetooth recorder image light number select switch button text'
+      ha-components: 'bluetooth recorder image light number select switch button text sensor binary_sensor'
       dependency-modes: '["current", "minimum"]'
-      minimum-packages: '["imagespec"]'
+      minimum-packages: '["imagespec", "blesession"]'

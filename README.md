@@ -28,7 +28,7 @@ Full hardware details and color capabilities are documented in the [User Guide](
 ## Requirements
 
 - **Home Assistant**: `2025.1.0` or newer.
-- **Bluetooth**: A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/hass-repo-standards/blob/main/docs/bluetooth.md) with `active: true` configured.
+- **Bluetooth**: A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md) with `active: true` configured.
 
 ## Installation
 
@@ -90,7 +90,7 @@ For more examples, animations, and image rendering syntax, refer to the [User Gu
 - [User Guide](docs/user-guide.md): Comprehensive device profiles, entity catalog, service reference, and `imagespec` declarative layouts.
 - [Troubleshooting](docs/troubleshooting.md): Connection debugging, proxy setup, and diagnostic entities.
 - [Development & Testing](docs/development.md): Development environment setup, test suite execution, and standards compliance.
-- [Shared Bluetooth Proxy Guide](https://github.com/eigger/hass-repo-standards/blob/main/docs/bluetooth.md): Recommended ESPHome proxy hardware and configurations.
+- [Shared Bluetooth Proxy Guide](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md): Recommended ESPHome proxy hardware and configurations.
 
 ## Support
 

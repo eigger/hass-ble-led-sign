@@ -28,7 +28,7 @@ BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, 
 ## 요구사항
 
 - **Home Assistant**: `2025.1.0` 이상.
-- **블루투스**: 로컬 블루투스 어댑터 또는 `active: true`로 설정된 [ESPHome 블루투스 프록시](https://github.com/eigger/hass-repo-standards/blob/main/docs/bluetooth.ko.md).
+- **블루투스**: 로컬 블루투스 어댑터 또는 `active: true`로 설정된 [ESPHome 블루투스 프록시](https://github.com/eigger/blesession/blob/main/docs/bluetooth.ko.md).
 
 ## 설치
 
@@ -83,14 +83,14 @@ data:
 
 - **동시 연결 제한**: BLE 전광판은 한 번에 하나의 중앙 기기(Central)와만 연결할 수 있습니다. 스마트폰의 제조사 앱(CoolLED1248, iPixel Color 등)이 실행 중이면 Home Assistant에서 연결할 수 없으므로 앱을 완전히 종료해야 합니다.
 - **패킷 전송 간격**: BLE 대역폭 한계로 인해 신호 간섭이 있는 환경에서는 대용량 데이터 전송 시 패킷 손실이 발생할 수 있습니다. 전송이 불안정한 경우 통합 구성 옵션에서 **재시도 횟수**나 **패킷 간격**을 늘려주세요.
-- 연결 문제 해결 및 진단 방법은 [문제 해결 문서](docs/ko/troubleshooting.md)를 확인하세요.
+- 연결 문제 해결 및 진단 방법은 [문제 해결 문서](docs/troubleshooting.ko.md)를 확인하세요.
 
 ## 문서
 
 - [사용자 가이드](docs/ko/user-guide.md): 제품군별 상세 사양, 엔티티 목록, 서비스 참조 및 `imagespec` 선언형 레이아웃 가이드.
-- [문제 해결](docs/ko/troubleshooting.md): 연결 문제 진단, 프록시 설정 점검 및 진단 엔티티 활용법.
+- [문제 해결](docs/troubleshooting.ko.md): 연결 문제 진단, 프록시 설정 점검 및 진단 엔티티 활용법.
 - [개발 및 테스트](docs/development.md): 개발 환경 구성, 테스트 실행 및 저장소 표준 안내.
-- [블루투스 프록시 가이드](https://github.com/eigger/hass-repo-standards/blob/main/docs/bluetooth.ko.md): 권장 ESPHome 프록시 하드웨어 및 설정 방법.
+- [블루투스 프록시 가이드](https://github.com/eigger/blesession/blob/main/docs/bluetooth.ko.md): 권장 ESPHome 프록시 하드웨어 및 설정 방법.
 
 ## 지원
 

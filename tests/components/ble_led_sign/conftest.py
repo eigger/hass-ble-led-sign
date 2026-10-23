@@ -35,6 +35,8 @@ class BleakTransport:
     def __init__(self) -> None:
         self.is_connected = False
         self.fail_connect = False
+        self.connect_calls = 0
+        self.disconnected_callback = None
         self.writes: list[tuple[str, bytes, bool]] = []
         self._handlers: dict[str, Any] = {}
 
@@ -46,6 +48,9 @@ class BleakTransport:
 
     async def disconnect(self) -> None:
         self.is_connected = False
+        self._handlers.clear()
+        if self.disconnected_callback:
+            self.disconnected_callback(self)
 
     async def start_notify(self, char_specifier: Any, callback: Any) -> None:
         self._handlers[str(char_specifier).lower()] = callback
@@ -68,7 +73,14 @@ class BleakTransport:
             uuid == "0000fa02-0000-1000-8000-00805f9b34fb"
             and fa_notify in self._handlers
         ):
-            self._handlers[fa_notify](None, bytearray([0x05, 0x00, 0x00, 0x00, 0x00]))
+            if packet[:4] == bytes([8, 0, 1, 0x80]):
+                self._handlers[fa_notify](
+                    None, bytearray([11, 0, 1, 0x80, 0, 0, 0, 0, 0, 0, 255])
+                )
+            else:
+                self._handlers[fa_notify](
+                    None, bytearray([0x05, 0x00, 0x00, 0x00, 0x00])
+                )
 
     async def request_mtu(self, mtu: int) -> int:
         return mtu
@@ -82,19 +94,14 @@ def transport(monkeypatch: pytest.MonkeyPatch) -> BleakTransport:
     fake_client = BleakTransport()
 
     async def fake_establish(_client_cls, ble_device, *args, **kwargs):
+        fake_client.connect_calls += 1
+        fake_client.disconnected_callback = kwargs.get("disconnected_callback")
         if fake_client.fail_connect:
             raise BleakError("Cannot connect to BLE device")
         await fake_client.connect()
         return fake_client
 
-    monkeypatch.setattr(
-        "custom_components.ble_led_sign.drivers.coolled.writer.establish_connection",
-        fake_establish,
-    )
-    monkeypatch.setattr(
-        "custom_components.ble_led_sign.drivers.ipixel_color.writer.establish_connection",
-        fake_establish,
-    )
+    monkeypatch.setattr("blesession.session.establish_connection", fake_establish)
     return fake_client
 
 

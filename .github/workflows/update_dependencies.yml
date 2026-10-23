@@ -14,7 +14,7 @@ jobs:
     uses: eigger/hass-repo-standards/.github/workflows/dependency-update.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
     with:
       domain: ble_led_sign
-      packages: '["imagespec"]'
+      packages: '["imagespec", "blesession"]'
       python-version: '3.14'
       ha-components: bluetooth recorder image light number select switch button text
       test-profile: ha

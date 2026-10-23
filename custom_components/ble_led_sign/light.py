@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.light import (
     ColorMode,
     LightEntity,
@@ -12,21 +11,15 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
+from .ble import async_send
 from .const import (
     BRIGHTNESS_MAX,
     BRIGHTNESS_MIN,
-    CONF_PASSWORD,
-    CONF_RETRY_COUNT,
-    CONF_WRITE_DELAY_MS,
-    DEFAULT_PASSWORD,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
     MODES_1248,
 )
@@ -87,40 +80,12 @@ class BleLedSignLight(RestoreEntity, LightEntity):
         return True
 
     async def _send(self, command: str, value: int | None = None) -> None:
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        data = self._hass.data[DOMAIN][self._entry_id]["data"]
-        device = data.device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        retries = int(options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT))
-        write_delay_ms = int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS))
-        password = options.get(CONF_PASSWORD, DEFAULT_PASSWORD)
-
-        for attempt in range(1, retries + 1):
-            success = await send_command(
-                ble_device,
-                device,
-                password,
-                write_delay_ms,
-                command,
-                value,
-            )
-            if success:
-                return
-            _LOGGER.warning(
-                "Command %s failed for %s (attempt %s/%s)",
-                command,
-                self._address,
-                attempt,
-                retries,
-            )
-        raise HomeAssistantError(f"Failed to send {command} to {self._address}")
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(*args, command, value),
+            operation=command,
+        )
 
     async def async_turn_on(self, **kwargs) -> None:
         brightness = kwargs.get("brightness")

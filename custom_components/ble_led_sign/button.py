@@ -4,21 +4,16 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from propcache.api import cached_property
 
+from .ble import async_send
 from .const import (
-    CONF_PASSWORD,
-    CONF_WRITE_DELAY_MS,
-    DEFAULT_PASSWORD,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
 )
 from .device import build_device_info, driver_supports
@@ -64,25 +59,14 @@ class BleLedSignClearButton(ButtonEntity):
         return True
 
     async def async_press(self) -> None:
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        device = self._hass.data[DOMAIN][self._entry_id]["data"].device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        success = await send_command(
-            ble_device,
-            device,
-            options.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-            int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS)),
-            "clear",
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(
+                *args,
+                "clear",
+            ),
         )
-        if not success:
-            raise HomeAssistantError("Failed to clear display")
 
 
 class BleLedSignStartCountdownButton(ButtonEntity):
@@ -109,25 +93,14 @@ class BleLedSignStartCountdownButton(ButtonEntity):
         return True
 
     async def async_press(self) -> None:
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
         runtime = self._hass.data[DOMAIN][self._entry_id]
-        device = runtime["data"].device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
         minutes = int(runtime.get("countdown_minutes", 5))
-        success = await send_command(
-            ble_device,
-            device,
-            options.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-            int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS)),
-            "countdown",
-            [1, minutes, 0],
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(
+                *args,
+                "countdown",
+                [1, minutes, 0],
+            ),
         )
-        if not success:
-            raise HomeAssistantError("Failed to start countdown")
