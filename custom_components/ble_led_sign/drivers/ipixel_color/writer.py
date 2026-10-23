@@ -8,16 +8,17 @@ into 244-byte BLE writes and acknowledged via 0xFA03 notifications.
 from __future__ import annotations
 
 import logging
-from asyncio import Event, sleep, wait_for
+from asyncio import sleep
 from collections.abc import Sequence
 from io import BytesIO
 from typing import Any
 
-from bleak import BleakClient, BleakError
+from bleak import BleakClient
 from bleak.backends.device import BLEDevice
-from bleak_retry_connector import establish_connection
+from blesession import Notifications, guarded_write
 from PIL import Image
 
+from ...ble import run_protocol
 from ...const import COLOR_TYPE_COLORFUL
 from ..base import DeviceEntry
 from .commands import (
@@ -44,7 +45,7 @@ from .commands import (
 )
 from .const import MTU_SIZE, UUID_FA_NOTIFY, UUID_FA_WRITE
 from .content import char_height_for, encode_text_payload, resize_image_bytes
-from .parser import DEFAULT_SIZE, build_get_device_info_command, parse_device_info
+from .parser import build_get_device_info_command, parse_device_info
 from .protocol import build_content_windows, build_text_windows
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,41 +141,22 @@ class IpixelColorClient:
         self.client = client
         self.device = device
         self.write_delay_ms = write_delay_ms
-        self._ack_event = Event()
-        self._info_event = Event()
-        self._info: bytes | None = None
-
-    def _notification_handler(self, _sender: Any, data: bytearray) -> None:
-        frame = bytes(data)
-        _LOGGER.debug("iPixel Color notification: %s", frame.hex())
-        if len(frame) == 5 and frame[0] == 0x05:
-            # Window/final ACK (data[4] in {0,1} per window, 3 = all done).
-            if frame[4] in (0, 1, 3):
-                self._ack_event.set()
-            return
-        # Any longer frame is treated as a query response (e.g. device info).
-        self._info = frame
-        self._info_event.set()
+        self._replies = Notifications(client, UUID_FA_NOTIFY, settle=0.2)
 
     async def setup(self) -> None:
-        try:
-            await self.client.start_notify(UUID_FA_NOTIFY, self._notification_handler)
-            await sleep(0.2)
-        except Exception as err:  # noqa: BLE001 - best effort
-            _LOGGER.debug("iPixel Color start_notify failed: %s", err)
+        await self._replies.__aenter__()
         try:
             await self.client.request_mtu(MTU_SIZE)
         except Exception as err:  # noqa: BLE001 - optional
             _LOGGER.debug("iPixel Color MTU request failed: %s", err)
 
     async def stop_notify(self) -> None:
-        try:
-            await self.client.stop_notify(UUID_FA_NOTIFY)
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("iPixel Color stop_notify failed: %s", err)
+        await self._replies.__aexit__(None, None, None)
 
     async def _raw_write(self, data: bytes) -> None:
-        await self.client.write_gatt_char(UUID_FA_WRITE, data, response=True)
+        await guarded_write(
+            self.client, UUID_FA_WRITE, data, response=True, step="write"
+        )
         if self.write_delay_ms > 0:
             await sleep(self.write_delay_ms / 1000.0)
 
@@ -183,22 +165,14 @@ class IpixelColorClient:
         await self._raw_write(data)
 
     async def query_dimensions(self) -> tuple[int, int]:
-        """Query the panel resolution, falling back to a sane default."""
-        self._info_event.clear()
-        try:
-            await self._raw_write(build_get_device_info_command())
-            await wait_for(self._info_event.wait(), ACK_TIMEOUT_S)
-            if self._info is not None:
-                width, height, _, _ = parse_device_info(self._info)
-                _LOGGER.debug("iPixel Color panel size: %sx%s", width, height)
-                return width, height
-        except (TimeoutError, ValueError, IndexError) as err:
-            _LOGGER.warning(
-                "iPixel Color device-info query failed (%s); using %sx%s",
-                err,
-                *DEFAULT_SIZE,
-            )
-        return DEFAULT_SIZE
+        """Query actual dimensions; silence must remain a reported failure."""
+        self._replies.clear()
+        await self._raw_write(build_get_device_info_command())
+        frame = await self._replies.wait_for(
+            lambda data: len(data) > 5, ACK_TIMEOUT_S, step="device_info"
+        )
+        width, height, _, _ = parse_device_info(frame)
+        return width, height
 
     def _chunk_size(self) -> int:
         # A GATT write payload is limited to (MTU - 3) bytes; cap at 244 to
@@ -210,33 +184,22 @@ class IpixelColorClient:
         """Stream content windows, waiting for an ACK after each."""
         chunk_size = self._chunk_size()
         for window in windows:
-            self._ack_event.clear()
+            self._replies.clear()
             for offset in range(0, len(window), chunk_size):
                 await self._raw_write(window[offset : offset + chunk_size])
-            try:
-                await wait_for(self._ack_event.wait(), ACK_TIMEOUT_S)
-            except TimeoutError as err:
-                raise BleakError("No transfer ACK from device") from err
+            await self._replies.wait_for(
+                lambda frame: (
+                    len(frame) == 5 and frame[0] == 0x05 and frame[4] in (0, 1, 3)
+                ),
+                ACK_TIMEOUT_S,
+                step="transfer_ack",
+            )
 
 
 async def _with_client(ble_device: BLEDevice, device: DeviceEntry, action) -> bool:
-    client: BleakClient | None = None
-    try:
-        client = await establish_connection(BleakClient, ble_device, ble_device.address)
-        led = IpixelColorClient(client, device)
-        await led.setup()
-        await action(led)
-        await led.stop_notify()
-        return True
-    except Exception as err:  # noqa: BLE001 - surfaced as a failed operation
-        _LOGGER.error("iPixel Color operation failed: %s", err)
-        return False
-    finally:
-        if client and client.is_connected:
-            try:
-                await client.disconnect()
-            except Exception:  # noqa: BLE001
-                pass
+    return await run_protocol(
+        ble_device, lambda client, trace: IpixelColorClient(client, device), action
+    )
 
 
 def _apply_dimensions(device: DeviceEntry, width: int, height: int) -> None:

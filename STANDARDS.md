@@ -33,3 +33,17 @@
 Base commit: `44d51e0332362bce84c3520ebc9b685074f74f47`. HACS remains Custom. `hacs.json` now selects `ble_led_sign.zip`; publishing the next release builds and attaches that integration ZIP through the pinned central action. Analytics Usage is replaced by Downloads. The archive contains tracked integration files at its root. No existing release/tag/assets are modified.
 
 Implementation and review: root; generated release caller reuses the independently reviewed central ZIP contract. Support minimum, manifest, code, dependencies, README body and prior adoption exceptions are preserved. Verification evidence is recorded in ADOPTION_CHECKLIST.md; this scoped update does not establish full standards compliance.
+
+
+## 2026-10-23 blesession and diagnostics
+
+Scoped implementation reference: hass-repo-standards `3897aaa8564e8e22582d72843534c92e87f83478`, hass-niimbot `0af28aafa29914cc61a9a117a3d29d006a18348b`, blesession public API 0.9.0 (source `4078a4025f6e07140c0aaffd92168a712f90b127`). This entry records the BLE change only; it does not assert a new complete standards adoption or update the existing CI pins.
+
+- Both CoolLED and iPixel Color use `ble_session`, queued `Notifications`, guarded writes, `run_attempts`, and frozen `SessionReports`. Services and entities share the domain lock per attempt; route lookup happens after acquiring it on every attempt.
+- Five diagnostic entities: active BLE connection, last operation, last error stage, last failure timestamp, failure count. Report attributes retain failure details/timings and available radio facts. Final failures survive recovery; intermediate retry failures and cancellations do not increment the final failure count. Counts are in-memory and reset on reload.
+- Integration diagnostics download excludes config/password/content and redacts radio identities and free-text errors. Raw entity attributes still require redaction before sharing.
+- Explicit password rejection stops retries. Silent authentication, dropped connections and hung writes fail visibly. Setup/MTU negotiation is limited to 15 seconds, individual GATT writes to 10 seconds; existing protocol response limits remain and bulk transfers have no overall deadline. Unload cancels queued/running sessions and waits for connection cleanup.
+- Active iPixel dimension queries no longer cache default dimensions after silence, and keep their device object across advertisements while a query runs.
+- English/Korean DOC-07 troubleshooting updated; the prior Korean URL is retained as a forwarding document. Support minimum stays HA 2025.1.0; runtime manifest adds `blesession>=0.9.0`; CI minimum-package and updater selections include it.
+
+Verification (real HA fixtures, mocked external BLE boundary): Python 3.14.7 / HA 2026.10.2 / pytest HA plugin 0.13.373: **55 passed**; Python 3.13.15 / HA 2025.1.0 / plugin 0.13.201: **55 passed**. Both install blesession 0.9.0 and imagespec 1.1.0; both `uv pip check` pass. Ruff lint/format, `git diff --check`, and the central DOC-07 checker pass. New regression coverage includes recovery/error retention, unreachable devices, rejected/silent authentication, dropped notification waits, bounded writes, cancellation/unload cleanup, report fallback/redaction, route lookup under lock and iPixel metadata preservation. No physical panel, proxy hardware, live HA UI or remote CI was tested in this change.

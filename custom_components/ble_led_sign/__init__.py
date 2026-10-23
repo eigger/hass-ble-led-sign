@@ -7,10 +7,10 @@ from asyncio import Lock
 from functools import partial
 from typing import Any
 
+from blesession import SessionReports
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
-    async_ble_device_from_address,
     async_last_service_info,
 )
 from homeassistant.const import ATTR_DEVICE_ID, Platform
@@ -38,15 +38,10 @@ except ImportError:
 
 from PIL import Image, ImageColor
 
+from .ble import async_send, async_stop_sessions
 from .const import (
     CONF_DRIVER_ID,
-    CONF_PASSWORD,
-    CONF_RETRY_COUNT,
-    CONF_WRITE_DELAY_MS,
     DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
     LOCK,
     MANUFACTURER,
@@ -74,6 +69,8 @@ from .services import SERVICE_NAMES
 from .types import BleLedSignConfigEntry
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
     Platform.BUTTON,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -151,6 +148,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
 
     hass.data[DOMAIN][entry.entry_id] = {
         "address": address,
+        "reports": SessionReports(),
+        "session_tasks": set(),
+        "connected": False,
+        "diagnostic_coordinator": DataUpdateCoordinator(
+            hass, _LOGGER, name=f"{DOMAIN}_diagnostics"
+        ),
         "data": data,
         "driver": driver,
         "countdown_minutes": 5,
@@ -275,13 +278,17 @@ async def _async_fetch_device_info(
     try:
         if driver is None or data.device is None:
             return
-        ble_device = async_ble_device_from_address(hass, runtime["address"])
-        if ble_device is None:
-            return
-        async with hass.data[DOMAIN][LOCK]:
-            ok = await driver.async_fetch_info(ble_device, data.device)
+        ok = await async_send(
+            hass,
+            entry.entry_id,
+            lambda args: driver.async_fetch_info(args[0], data.device),
+            operation="device_info",
+            attempts=1,
+        )
         if ok and data.last_service_info is not None:
             sync_device_registry(hass, entry, data.last_service_info)
+    except HomeAssistantError as err:
+        _LOGGER.debug("Device-info query failed: %s", err)
     finally:
         # Allow a later advertisement to retry if the size is still unknown.
         runtime["info_fetching"] = False
@@ -291,6 +298,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and DOMAIN in hass.data:
+        await async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
         hass.data[DOMAIN].pop(entry.entry_id, None)
         if not [k for k in hass.data[DOMAIN] if k != LOCK]:
             for service in SERVICE_NAMES:
@@ -402,22 +410,22 @@ async def _write_label_to_device(
     if dry_run:
         return
 
-    async with hass.data[DOMAIN][LOCK]:
-        success = await _ble_send(
-            hass,
-            entry_id,
-            lambda args: send_image(
-                args[0],
-                args[1],
-                args[2],
-                args[3],
-                image,
-                threshold=threshold,
-                invert=invert,
-            ),
-        )
-        if success:
-            runtime["image_coordinator"].async_set_updated_data(png_bytes)
+    success = await _ble_send(
+        hass,
+        entry_id,
+        lambda args: send_image(
+            args[0],
+            args[1],
+            args[2],
+            args[3],
+            image,
+            threshold=threshold,
+            invert=invert,
+        ),
+        operation="write",
+    )
+    if success:
+        runtime["image_coordinator"].async_set_updated_data(png_bytes)
 
 
 def _parse_rgb(value: str | None) -> tuple[int, int, int] | None:
@@ -463,14 +471,14 @@ async def _send_text_to_device(
     if service.data.get("font"):
         options["font_path"] = service.data["font"]
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: send_text(
-                *client_args, text, text_color=text_color, **options
-            ),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: send_text(
+            *client_args, text, text_color=text_color, **options
+        ),
+        operation="send_text",
+    )
 
 
 async def _send_image_to_device(
@@ -504,21 +512,21 @@ async def _send_image_to_device(
 
     save_slot = int(service.data.get("save_slot", 0))
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda args: send_image(
-                args[0],
-                args[1],
-                args[2],
-                args[3],
-                image,
-                threshold=threshold,
-                invert=invert,
-                save_slot=save_slot,
-            ),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda args: send_image(
+            args[0],
+            args[1],
+            args[2],
+            args[3],
+            image,
+            threshold=threshold,
+            invert=invert,
+            save_slot=save_slot,
+        ),
+        operation="send_image",
+    )
 
 
 async def _send_animation_to_device(
@@ -533,19 +541,19 @@ async def _send_animation_to_device(
     invert = service.data.get("invert", False)
     save_slot = int(service.data.get("save_slot", 0))
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: send_animation(
-                *client_args,
-                image_path,
-                speed_ms=speed_ms,
-                threshold=threshold,
-                invert=invert,
-                save_slot=save_slot,
-            ),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: send_animation(
+            *client_args,
+            image_path,
+            speed_ms=speed_ms,
+            threshold=threshold,
+            invert=invert,
+            save_slot=save_slot,
+        ),
+        operation="send_animation",
+    )
 
 
 async def _send_jt_to_device(
@@ -555,12 +563,12 @@ async def _send_jt_to_device(
     if not jt_path:
         raise HomeAssistantError("jt_path is required")
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: send_jt(*client_args, jt_path),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: send_jt(*client_args, jt_path),
+        operation="send_jt",
+    )
 
 
 async def _send_command_to_device(
@@ -571,12 +579,12 @@ async def _send_command_to_device(
         raise HomeAssistantError("command is required")
     value = service.data.get("value")
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: send_command(*client_args, command, value),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: send_command(*client_args, command, value),
+        operation="send_command",
+    )
 
 
 async def _set_icon_on_device(
@@ -586,12 +594,12 @@ async def _set_icon_on_device(
     if icon_id is None:
         raise HomeAssistantError("icon_id is required")
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: set_icon(*client_args, int(icon_id)),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: set_icon(*client_args, int(icon_id)),
+        operation="set_icon",
+    )
 
 
 async def _set_music_on_device(
@@ -605,43 +613,19 @@ async def _set_music_on_device(
     if len(heights) != 8 or len(colors) != 8:
         raise HomeAssistantError("heights and colors must each contain 8 values")
 
-    async with hass.data[DOMAIN][LOCK]:
-        await _ble_send(
-            hass,
-            entry_id,
-            lambda client_args: send_music(
-                *client_args,
-                [int(value) for value in heights],
-                [int(value) for value in colors],
-            ),
-        )
+    await _ble_send(
+        hass,
+        entry_id,
+        lambda client_args: send_music(
+            *client_args,
+            [int(value) for value in heights],
+            [int(value) for value in colors],
+        ),
+        operation="set_music",
+    )
 
 
-async def _ble_send(hass: HomeAssistant, entry_id: str, sender) -> bool:
-    runtime = hass.data[DOMAIN][entry_id]
-    address = runtime["address"]
-    data: BleLedSignBluetoothDeviceData = runtime["data"]
-    device = data.device
-    if device is None:
-        raise HomeAssistantError("Device metadata is not ready yet")
-
-    options = _get_options(hass, entry_id)
-    ble_device = async_ble_device_from_address(hass, address)
-    if ble_device is None:
-        raise HomeAssistantError("BLE device is unavailable")
-
-    retries = int(options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT))
-    write_delay_ms = int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS))
-    password = options.get(CONF_PASSWORD, DEFAULT_PASSWORD)
-
-    for attempt in range(1, retries + 1):
-        success = await sender((ble_device, device, password, write_delay_ms))
-        if success:
-            return True
-        _LOGGER.warning(
-            "BLE operation failed for %s (attempt %s/%s)",
-            address,
-            attempt,
-            retries,
-        )
-    raise HomeAssistantError(f"Failed to communicate with {address}")
+async def _ble_send(
+    hass: HomeAssistant, entry_id: str, sender, *, operation="write"
+) -> bool:
+    return await async_send(hass, entry_id, sender, operation=operation)

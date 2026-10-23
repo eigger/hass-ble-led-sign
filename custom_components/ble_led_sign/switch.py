@@ -4,22 +4,17 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from propcache.api import cached_property
 
+from .ble import async_send
 from .const import (
-    CONF_PASSWORD,
-    CONF_WRITE_DELAY_MS,
-    DEFAULT_PASSWORD,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
 )
 from .device import build_device_info, driver_supports
@@ -63,26 +58,15 @@ class BleLedSignFlipSwitch(RestoreEntity, SwitchEntity):
         return True
 
     async def _set_flip(self, flipped: bool) -> None:
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        device = self._hass.data[DOMAIN][self._entry_id]["data"].device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        success = await send_command(
-            ble_device,
-            device,
-            options.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-            int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS)),
-            "flip",
-            1 if flipped else 0,
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_command(
+                *args,
+                "flip",
+                1 if flipped else 0,
+            ),
         )
-        if not success:
-            raise HomeAssistantError("Failed to set flip")
         self._attr_is_on = flipped
         self.async_write_ha_state()
 

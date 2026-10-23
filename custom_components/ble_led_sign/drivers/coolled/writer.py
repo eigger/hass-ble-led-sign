@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import logging
-from asyncio import Event, sleep, wait_for
-from typing import Any
+from asyncio import sleep
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
-from bleak_retry_connector import establish_connection
+from blesession import Notifications, SessionTrace, guarded_write
 from PIL import Image
 
+from ...ble import AuthenticationRejected, run_protocol
 from ...const import (
     BRIGHTNESS_OFFSET,
     DEFAULT_SPLIT_WRITE,
@@ -60,7 +60,9 @@ class CoolledClient:
         device: DeviceEntry,
         password: str = "000000",
         write_delay_ms: int = PACKET_DELAY_MS,
+        trace: SessionTrace | None = None,
     ) -> None:
+        self.trace = trace if trace is not None else SessionTrace()
         self.client = client
         self.device = device
         self.password = password
@@ -68,39 +70,34 @@ class CoolledClient:
         self.split_write = (
             MTU_SPLIT_WRITE if device.use_large_mtu else DEFAULT_SPLIT_WRITE
         )
-        self._event = Event()
-        self._last_response: list[int] = []
+        self._replies = Notifications(client, UUID_CHAR, settle=0.3)
 
     async def start_notify(self) -> None:
-        await self.client.start_notify(UUID_CHAR, self._notification_handler)
-        await sleep(0.3)
+        await self._replies.__aenter__()
 
     async def stop_notify(self) -> None:
-        await self.client.stop_notify(UUID_CHAR)
-
-    def _notification_handler(self, _sender: Any, data: bytearray) -> None:
-        self._last_response = parse_response(bytes(data))
-        self._event.set()
-        _LOGGER.debug("Notification: %s", self._last_response)
+        await self._replies.__aexit__(None, None, None)
 
     async def _write_raw(self, data: bytes, response: bool = False) -> None:
         delay = self.write_delay_ms / 1000.0
         for offset in range(0, len(data), self.split_write):
             chunk = data[offset : offset + self.split_write]
-            await self.client.write_gatt_char(UUID_CHAR, chunk, response)
+            await guarded_write(
+                self.client, UUID_CHAR, chunk, response=response, step="write"
+            )
             if delay > 0:
                 await sleep(delay)
 
     async def _write(self, data: bytes, wait_response: bool = False) -> list[int]:
-        self._event.clear()
+        self._replies.clear()
         await self._write_raw(data)
         if not wait_response:
             return []
-        try:
-            await wait_for(self._event.wait(), RESPONSE_TIMEOUT_S)
-        except TimeoutError:
-            _LOGGER.warning("Response timeout")
-        return self._last_response
+        frame = await self._replies.next(RESPONSE_TIMEOUT_S, step="response")
+        response = parse_response(frame)
+        if not response:
+            raise BleakError("Malformed response from LED sign")
+        return response
 
     async def setup(self) -> None:
         if self.device.use_large_mtu:
@@ -110,11 +107,12 @@ class CoolledClient:
                 _LOGGER.debug("MTU request failed: %s", err)
         await self.start_notify()
         if self.device.requires_password:
-            response = await self._write(
-                cmd_password_check(self.password), wait_response=True
-            )
-            if response and response[-1] != 0x00:
-                raise BleakError("Password verification failed")
+            with self.trace.timed("auth"):
+                response = await self._write(
+                    cmd_password_check(self.password), wait_response=True
+                )
+                if response and response[-1] != 0x00:
+                    raise AuthenticationRejected("Password verification failed")
 
     async def turn_on(self) -> None:
         await self._write(cmd_switch(True))
@@ -141,7 +139,7 @@ class CoolledClient:
         for frame in frames:
             for attempt in range(1, MAX_PACKET_RETRIES + 1):
                 response = await self._write(frame, wait_response=True)
-                if not response or response[-1] == 0x00:
+                if response[-1] == 0x00:
                     break
                 _LOGGER.warning(
                     "Transfer packet retry %s/%s", attempt, MAX_PACKET_RETRIES
@@ -189,26 +187,13 @@ async def _with_client(
     write_delay_ms: int,
     action,
 ) -> bool:
-    client: BleakClient | None = None
-    try:
-        client = await establish_connection(BleakClient, ble_device, ble_device.address)
-        coolled = CoolledClient(client, device, password, write_delay_ms)
-        await coolled.setup()
-        await action(coolled)
-        try:
-            await coolled.stop_notify()
-        except Exception as err:
-            _LOGGER.debug("Stop notify: %s", err)
-        return True
-    except Exception as err:
-        _LOGGER.error("CoolLED operation failed: %s", err)
-        return False
-    finally:
-        if client and client.is_connected:
-            try:
-                await client.disconnect()
-            except Exception:
-                pass
+    return await run_protocol(
+        ble_device,
+        lambda client, trace: CoolledClient(
+            client, device, password, write_delay_ms, trace
+        ),
+        action,
+    )
 
 
 async def send_command(

@@ -218,6 +218,29 @@
       "preview_content": {
         "name": "Render Preview"
       }
+    },
+    "sensor": {
+      "last_operation": {
+        "name": "Last operation",
+        "state": {
+          "success": "Success",
+          "failed": "Failed"
+        }
+      },
+      "last_error": {
+        "name": "Last error stage"
+      },
+      "last_failure": {
+        "name": "Last failure"
+      },
+      "failure_count": {
+        "name": "Failure count"
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "BLE connection"
+      }
     }
   },
   "config": {

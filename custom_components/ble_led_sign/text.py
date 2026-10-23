@@ -4,23 +4,16 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.text import RestoreText
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from propcache.api import cached_property
 
+from .ble import async_send
 from .const import (
-    CONF_PASSWORD,
-    CONF_RETRY_COUNT,
-    CONF_WRITE_DELAY_MS,
-    DEFAULT_PASSWORD,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_WRITE_DELAY_MS,
     DOMAIN,
 )
 from .device import build_device_info, driver_supports
@@ -67,36 +60,14 @@ class BleLedSignDisplayText(RestoreText):
         return True
 
     async def async_set_value(self, value: str) -> None:
-        entry = self._hass.config_entries.async_get_entry(self._entry_id)
-        options = {**(entry.data if entry else {}), **(entry.options if entry else {})}
-        data = self._hass.data[DOMAIN][self._entry_id]["data"]
-        device = data.device
-        if device is None:
-            raise HomeAssistantError("Device metadata is not ready yet")
-
-        ble_device = async_ble_device_from_address(self._hass, self._address)
-        if ble_device is None:
-            raise HomeAssistantError("BLE device is unavailable")
-
-        retries = int(options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT))
-        write_delay_ms = int(options.get(CONF_WRITE_DELAY_MS, DEFAULT_WRITE_DELAY_MS))
-        password = options.get(CONF_PASSWORD, DEFAULT_PASSWORD)
-
-        for attempt in range(1, retries + 1):
-            success = await send_text(
-                ble_device, device, password, write_delay_ms, value
-            )
-            if success:
-                self._attr_native_value = value
-                self.async_write_ha_state()
-                return
-            _LOGGER.warning(
-                "Text send failed for %s (attempt %s/%s)",
-                self._address,
-                attempt,
-                retries,
-            )
-        raise HomeAssistantError("Failed to send text")
+        await async_send(
+            self._hass,
+            self._entry_id,
+            lambda args: send_text(*args, value),
+            operation="text",
+        )
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
