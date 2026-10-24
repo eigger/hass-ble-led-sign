@@ -5,6 +5,7 @@ import asyncio
 import pytest
 from bleak.exc import BleakError
 from blesession import ConnectFailed, NotificationTimeout, SessionDropped, WriteTimeout
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.ble_led_sign.ble import async_send
@@ -310,3 +311,13 @@ async def test_unreachable_releases_kept_link(
     with pytest.raises(HomeAssistantError):
         await command(hass, loaded_entry)
     assert "client" not in runtime
+
+
+async def test_stop_event_releases_kept_link(hass, loaded_entry, transport):
+    await keep_connection(hass, loaded_entry)
+    await command(hass, loaded_entry)
+    assert transport.is_connected
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert not transport.is_connected
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)

@@ -255,15 +255,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
     # Register update listener to trigger reload on options change across all HA versions
     # (since OptionsFlowWithReload is not available in HA 2025.1.0).
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
+
     # Unload doesn't run on shutdown; release a kept link so it can't outlive HA.
-    entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            lambda _: hass.async_create_task(
-                async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
-            ),
-        )
+    async def _async_release_link(_event) -> None:
+        await async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
+
+    stop_fired = False
+
+    async def _async_on_stop(event) -> None:
+        nonlocal stop_fired
+        stop_fired = True
+        await _async_release_link(event)
+
+    remove_stop_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_on_stop
     )
+    # A fired listen_once has already removed itself.
+    entry.async_on_unload(lambda: None if stop_fired else remove_stop_listener())
 
     return True
 
@@ -307,8 +315,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and DOMAIN in hass.data:
-        await async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        # Pop first so a send arriving during the disconnect can't reopen a link.
+        await async_stop_sessions(hass.data[DOMAIN].pop(entry.entry_id))
         if not [k for k in hass.data[DOMAIN] if k != LOCK]:
             for service in SERVICE_NAMES:
                 if hass.services.has_service(DOMAIN, service):
