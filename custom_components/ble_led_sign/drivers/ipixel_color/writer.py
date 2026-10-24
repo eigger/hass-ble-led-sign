@@ -18,7 +18,7 @@ from bleak.backends.device import BLEDevice
 from blesession import Notifications, guarded_write
 from PIL import Image
 
-from ...ble import run_protocol
+from ...ble import request_mtu_once, run_protocol
 from ...const import COLOR_TYPE_COLORFUL
 from ..base import DeviceEntry
 from .commands import (
@@ -147,7 +147,7 @@ class IpixelColorClient:
     async def setup(self) -> None:
         await self._replies.__aenter__()
         try:
-            await self.client.request_mtu(MTU_SIZE)
+            await request_mtu_once(self.client, MTU_SIZE)
         except Exception as err:  # noqa: BLE001 - optional
             _LOGGER.debug("iPixel Color MTU request failed: %s", err)
 

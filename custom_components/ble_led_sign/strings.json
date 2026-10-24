@@ -271,12 +271,14 @@
         "data": {
           "password": "Device Password",
           "retry_count": "Retry Count",
-          "write_delay_ms": "Packet Delay (ms)"
+          "write_delay_ms": "Packet Delay (ms)",
+          "keep_connection": "Stay Connected"
         },
         "data_description": {
           "password": "6-digit password for protected devices (default 000000).",
           "retry_count": "Number of retries before reporting failure.",
-          "write_delay_ms": "Delay between BLE packets (default 15 ms)."
+          "write_delay_ms": "Delay between BLE packets (default 15 ms).",
+          "keep_connection": "Keep the Bluetooth link open between sends instead of reconnecting each time. Holds one proxy connection slot, and other apps can't connect to the sign meanwhile."
         }
       }
     }
