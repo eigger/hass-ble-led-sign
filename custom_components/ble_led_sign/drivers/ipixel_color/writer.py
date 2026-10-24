@@ -123,7 +123,8 @@ def build_command(command: str, value: int | str | Sequence | None = None) -> by
             return cmd_set_time(int(v[0]), int(v[1]), int(v[2]))
         return cmd_set_time()
     if command == "show_slot":
-        return cmd_show_slot(_as_int(value))
+        slots = [int(v) for v in _as_list(value)]
+        return cmd_show_slot(slots if value is not None else [0])
     if command == "delete_slot":
         return cmd_delete_slot(_as_int(value))
     raise ValueError(f"Unsupported iPixel Color command: {command}")

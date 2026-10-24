@@ -213,9 +213,21 @@ def cmd_set_time(
     return build_frame(CMD_SET_TIME, SUB_SET_TIME, hour, minute, second, 0)
 
 
-def cmd_show_slot(number: int) -> bytes:
-    """Display a saved slot (``07 00 08 80 01 00 <n>``)."""
-    return build_frame(CMD_SHOW_SLOT, SUB_SHOW_SLOT, 0x01, 0x00, number)
+MAX_SHOW_SLOTS = 14  # keeps the frame within a default 20-byte BLE write
+
+
+def cmd_show_slot(numbers: int | list[int]) -> bytes:
+    """Display saved slots, cycling through them in order (``08 80 <count u16> <n>...``)."""
+    slots = [numbers] if isinstance(numbers, int) else list(numbers)
+    if not slots:
+        raise ValueError("show_slot needs at least one slot")
+    if len(slots) > MAX_SHOW_SLOTS:
+        raise ValueError(f"show_slot accepts at most {MAX_SHOW_SLOTS} slots")
+    if any(not 0 <= n <= 255 for n in slots):
+        raise ValueError("show_slot numbers must be between 0 and 255")
+    return build_frame(
+        CMD_SHOW_SLOT, SUB_SHOW_SLOT, len(slots) & 0xFF, len(slots) >> 8, *slots
+    )
 
 
 def cmd_delete_slot(number: int) -> bytes:
