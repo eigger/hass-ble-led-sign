@@ -258,7 +258,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
 
     # Unload doesn't run on shutdown; release a kept link so it can't outlive HA.
     async def _async_release_link(_event) -> None:
-        await async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
+        # Already gone when a reload is unloading the entry at the same time.
+        if runtime := hass.data.get(DOMAIN, {}).get(entry.entry_id):
+            await async_stop_sessions(runtime)
 
     stop_fired = False
 
