@@ -58,6 +58,7 @@ Configure via **Settings → Devices & Services → BLE LED Sign → Configure**
 | **Device Password** | `000000` | 6 chars | Authentication password for protected CoolLED and iPixel models. |
 | **Retry Count** | 3 | 1–10 | Connection retry count upon BLE communication failure. |
 | **Packet Delay (ms)** | 15 | 0–1000 | Delay in milliseconds between consecutive BLE packet transmissions. Increase to 50–100 ms if packet loss occurs. |
+| **Stay Connected** | Off | On/Off | Keep the Bluetooth link open between sends instead of reconnecting each time. Each sign holds one connection slot (ESPHome proxies typically have 3), and other apps cannot connect to the sign meanwhile. |
 
 ---
 

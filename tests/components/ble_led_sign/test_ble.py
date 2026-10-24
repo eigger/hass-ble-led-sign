@@ -277,3 +277,36 @@ async def test_keep_connection_drops_link_after_failure(
     assert not transport.is_connected
     assert "client" not in runtime
     assert not runtime["connected"]
+
+
+async def test_keep_connection_survives_vanished_advertisement(
+    hass, loaded_entry, transport, monkeypatch
+):
+    await keep_connection(hass, loaded_entry)
+    await command(hass, loaded_entry)
+    before = transport.connect_calls
+    # A connected sign stops advertising, so Home Assistant forgets it.
+    monkeypatch.setattr(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        lambda *a, **k: None,
+    )
+    await command(hass, loaded_entry)
+    assert transport.connect_calls == before
+    assert transport.is_connected
+
+
+async def test_unreachable_releases_kept_link(
+    hass, loaded_entry, transport, monkeypatch
+):
+    await keep_connection(hass, loaded_entry)
+    runtime = hass.data[DOMAIN][loaded_entry.entry_id]
+    await command(hass, loaded_entry)
+    transport.is_connected = False
+    runtime.pop("ble_device")
+    monkeypatch.setattr(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+        lambda *a, **k: None,
+    )
+    with pytest.raises(HomeAssistantError):
+        await command(hass, loaded_entry)
+    assert "client" not in runtime

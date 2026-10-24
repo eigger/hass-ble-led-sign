@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_last_service_info,
 )
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -255,6 +255,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
     # Register update listener to trigger reload on options change across all HA versions
     # (since OptionsFlowWithReload is not available in HA 2025.1.0).
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
+    # Unload doesn't run on shutdown; release a kept link so it can't outlive HA.
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            lambda _: hass.async_create_task(
+                async_stop_sessions(hass.data[DOMAIN][entry.entry_id])
+            ),
+        )
+    )
 
     return True
 

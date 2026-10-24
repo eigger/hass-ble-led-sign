@@ -10,7 +10,7 @@ from bleak.backends.device import BLEDevice
 from blesession import Notifications, SessionTrace, guarded_write
 from PIL import Image
 
-from ...ble import AuthenticationRejected, run_protocol
+from ...ble import AuthenticationRejected, request_mtu_once, run_protocol
 from ...const import (
     BRIGHTNESS_OFFSET,
     DEFAULT_SPLIT_WRITE,
@@ -102,7 +102,7 @@ class CoolledClient:
     async def setup(self) -> None:
         if self.device.use_large_mtu:
             try:
-                await self.client.request_mtu(MTU_SIZE)
+                await request_mtu_once(self.client, MTU_SIZE)
             except Exception as err:
                 _LOGGER.debug("MTU request failed: %s", err)
         await self.start_notify()
