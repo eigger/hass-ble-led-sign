@@ -27,12 +27,14 @@
         "data": {
           "password": "디바이스 비밀번호",
           "retry_count": "재시도 횟수",
-          "write_delay_ms": "패킷 간격 (ms)"
+          "write_delay_ms": "패킷 간격 (ms)",
+          "keep_connection": "연결 유지"
         },
         "data_description": {
           "password": "비밀번호 보호 디바이스용 6자리 비밀번호 (기본값 000000).",
           "retry_count": "실패 보고 전 재시도 횟수.",
-          "write_delay_ms": "BLE 패킷 간 딜레이 (기본 15ms)."
+          "write_delay_ms": "BLE 패킷 간 딜레이 (기본 15ms).",
+          "keep_connection": "전송할 때마다 다시 연결하지 않고 블루투스 연결을 유지합니다. 프록시 연결 슬롯 하나를 차지하며, 그동안 다른 앱은 사인에 연결할 수 없습니다."
         }
       }
     }

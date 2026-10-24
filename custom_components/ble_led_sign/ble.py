@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from asyncio import current_task, gather, timeout
+from contextlib import suppress
 from contextvars import ContextVar
 
 from blesession import (
@@ -14,14 +15,17 @@ from blesession import (
     fallback_report,
     report_attempt,
     run_attempts,
+    still_up,
 )
 from blesession.hass import ble_device_or_raise, radio_facts
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    CONF_KEEP_CONNECTION,
     CONF_PASSWORD,
     CONF_RETRY_COUNT,
     CONF_WRITE_DELAY_MS,
+    DEFAULT_KEEP_CONNECTION,
     DEFAULT_PASSWORD,
     DEFAULT_RETRY_COUNT,
     DEFAULT_WRITE_DELAY_MS,
@@ -42,18 +46,33 @@ class AuthenticationRejected(DeviceError):
     retryable = False
 
 
+async def _drop_kept(runtime) -> None:
+    """Close a link kept open between sends."""
+    client = runtime.pop("client", None)
+    if client is not None and client.is_connected:
+        with suppress(Exception):
+            async with timeout(10):
+                await client.disconnect()
+
+
 async def run_protocol(ble_device, factory, action) -> bool:
     """Run a driver protocol with bounded connection cleanup and stage timings."""
     active = _ACTIVE.get()
     trace = active[0] if active else SessionTrace({"setup": "session"})
     status = active[1] if active else lambda connected: None
+    runtime = active[2] if active else {}
+    keep = bool(active and active[3])
     try:
         async with ble_session(
             ble_device,
             trace=trace,
             max_attempts=1,
             disconnected_callback=lambda client: status(False),
+            client=runtime.get("client"),
+            keep=keep,
         ) as client:
+            # A kept link is reused by the next send instead of reconnecting.
+            runtime["client"] = client if keep else None
             status(True)
             protocol = factory(client, trace)
             with trace.timed("setup"):
@@ -64,8 +83,13 @@ async def run_protocol(ble_device, factory, action) -> bool:
             with trace.timed("finish"):
                 await protocol.stop_notify()
         return True
+    except BaseException:
+        # A link left mid-transfer isn't safe for the next send.
+        if keep:
+            await _drop_kept(runtime)
+        raise
     finally:
-        status(False)
+        status(keep and still_up(runtime.get("client")))
 
 
 async def async_send(hass, entry_id, sender, *, operation="write", attempts=None):
@@ -76,6 +100,7 @@ async def async_send(hass, entry_id, sender, *, operation="write", attempts=None
         raise HomeAssistantError("Device metadata is not ready yet")
     entry = hass.config_entries.async_get_entry(entry_id)
     options = {**entry.data, **entry.options} if entry else {}
+    keep = bool(options.get(CONF_KEEP_CONNECTION, DEFAULT_KEEP_CONNECTION))
     retries = attempts or max(
         1, int(options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT))
     )
@@ -89,7 +114,7 @@ async def async_send(hass, entry_id, sender, *, operation="write", attempts=None
     async def once(attempt):
         # Resolve the route after acquiring the lock on every retry.
         ble_device = ble_device_or_raise(hass, runtime["address"])
-        token = _ACTIVE.set((attempt.trace, status))
+        token = _ACTIVE.set((attempt.trace, status, runtime, keep))
         try:
             success = await sender(
                 (
@@ -143,3 +168,4 @@ async def async_stop_sessions(runtime):
     for task in tasks:
         task.cancel()
     await gather(*tasks, return_exceptions=True)
+    await _drop_kept(runtime)

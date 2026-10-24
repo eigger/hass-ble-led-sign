@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -29,9 +30,11 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_DRIVER_ID,
+    CONF_KEEP_CONNECTION,
     CONF_PASSWORD,
     CONF_RETRY_COUNT,
     CONF_WRITE_DELAY_MS,
+    DEFAULT_KEEP_CONNECTION,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_RETRY_COUNT,
@@ -56,6 +59,9 @@ OPTIONS_SCHEMA = {
             unit_of_measurement="ms",
         )
     ),
+    vol.Required(
+        CONF_KEEP_CONNECTION, default=DEFAULT_KEEP_CONNECTION
+    ): BooleanSelector(),
 }
 
 

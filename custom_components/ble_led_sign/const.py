@@ -20,12 +20,14 @@ CONF_DRIVER_ID = "driver_id"
 CONF_PASSWORD = "password"
 CONF_RETRY_COUNT = "retry_count"
 CONF_WRITE_DELAY_MS = "write_delay_ms"
+CONF_KEEP_CONNECTION = "keep_connection"
 CONF_REQUEST_MTU = "request_mtu"
 
 # Defaults
 DEFAULT_PASSWORD = "000000"
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_WRITE_DELAY_MS = 15
+DEFAULT_KEEP_CONNECTION = False
 DEFAULT_REQUEST_MTU = True
 
 # Protocol timing

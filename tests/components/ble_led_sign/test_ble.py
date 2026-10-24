@@ -3,11 +3,12 @@
 import asyncio
 
 import pytest
+from bleak.exc import BleakError
 from blesession import ConnectFailed, NotificationTimeout, SessionDropped, WriteTimeout
 from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.ble_led_sign.ble import async_send
-from custom_components.ble_led_sign.const import DOMAIN
+from custom_components.ble_led_sign.const import CONF_KEEP_CONNECTION, DOMAIN
 from custom_components.ble_led_sign.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -232,3 +233,47 @@ async def test_retry_resolves_route_under_lock(hass, loaded_entry, monkeypatch):
     assert reports.last["success"]
     assert reports.last_retry["retrying"]
     assert reports.failures == 0
+
+
+async def keep_connection(hass, entry):
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, CONF_KEEP_CONNECTION: True}
+    )
+    await hass.async_block_till_done()
+
+
+async def test_keep_connection_reuses_link(hass, loaded_entry, transport):
+    await keep_connection(hass, loaded_entry)
+    runtime = hass.data[DOMAIN][loaded_entry.entry_id]
+    before = transport.connect_calls
+    await command(hass, loaded_entry)
+    await command(hass, loaded_entry)
+    assert transport.connect_calls == before + 1
+    assert transport.is_connected
+    assert runtime["connected"]
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+    assert not transport.is_connected
+
+
+async def test_keep_connection_drops_link_after_failure(
+    hass, loaded_entry, transport, monkeypatch
+):
+    await keep_connection(hass, loaded_entry)
+    runtime = hass.data[DOMAIN][loaded_entry.entry_id]
+    await command(hass, loaded_entry)
+
+    async def fail(uuid, data, response=False):
+        raise BleakError("write failed")
+
+    monkeypatch.setattr(transport, "write_gatt_char", fail)
+    with pytest.raises(HomeAssistantError):
+        await async_send(
+            hass,
+            loaded_entry.entry_id,
+            lambda args: send_command(*args, "turn_off"),
+            operation="turn_off",
+            attempts=1,
+        )
+    assert not transport.is_connected
+    assert "client" not in runtime
+    assert not runtime["connected"]
