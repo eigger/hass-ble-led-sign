@@ -160,7 +160,7 @@
         },
         "value": {
           "name": "Value",
-          "description": "Optional argument(s): a single number, or a list for multi-argument commands (e.g. scoreboard: [3, 1]; clock: [mode, time_scale, show_date])."
+          "description": "Optional argument(s): a single number, or a list for multi-argument commands (e.g. scoreboard: [3, 1]; clock: [mode, time_scale, show_date]; show_slot: a slot number or a list of slots to cycle, e.g. [1, 2, 3])."
         }
       }
     }
