@@ -130,12 +130,7 @@ def _resolve_driver(entry: BleLedSignConfigEntry, data: BleLedSignBluetoothDevic
 
 # Keep the existing extensible write API while exposing its real schema to HA.
 WRITE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("payload"): object,
-        vol.Optional("rotate"): vol.Coerce(int),
-        vol.Optional("background"): str,
-        vol.Optional("dry_run"): bool,
-    },
+    {vol.Optional("payload"): object},
     extra=vol.ALLOW_EXTRA,
 )
 

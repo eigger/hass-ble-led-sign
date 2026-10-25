@@ -325,3 +325,38 @@ async def test_service_target_invalid_entity_id_raises(
             },
             blocking=True,
         )
+
+
+async def test_write_schema_preserves_legacy_data_formats(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    transport: BleakTransport,
+) -> None:
+    """Schema registration retains RGB backgrounds, truthy dry-run and extra fields."""
+    device_id = hass.data[DOMAIN][loaded_entry.entry_id]["device_id"]
+    transport.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        "write",
+        {
+            "device_id": device_id,
+            "payload": [
+                {
+                    "type": "rectangle",
+                    "x_start": 0,
+                    "y_start": 0,
+                    "x_end": 5,
+                    "y_end": 5,
+                    "fill": "white",
+                }
+            ],
+            "background": (0, 0, 0),
+            "rotate": "0",
+            "dry_run": 1,
+            "legacy_extra": "preserved",
+        },
+        blocking=True,
+    )
+    assert not transport.writes
+    runtime = hass.data[DOMAIN][loaded_entry.entry_id]
+    assert runtime["preview_coordinator"].data is not None
