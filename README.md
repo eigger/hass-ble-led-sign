@@ -1,4 +1,9 @@
+<!-- hass-standards:header:start -->
 # BLE LED Sign
+
+BLE LED Sign is a unified Home Assistant integration for controlling Bluetooth Low Energy (BLE) matrix LED displays (CoolLED, iLed, iPixel Color). Automate scrolling text, static messages, graphics, and dynamic layouts from Home Assistant instead of vendor mobile apps.
+
+**English** | [한국어](README.ko.md)
 
 <!-- hass-standards:badges:start -->
 [![Release](https://img.shields.io/github/v/release/eigger/hass-ble-led-sign?style=flat)](https://github.com/eigger/hass-ble-led-sign/releases)
@@ -9,10 +14,7 @@
 [![License](https://img.shields.io/github/license/eigger/hass-ble-led-sign?style=flat)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/eigger/hass-ble-led-sign/total?style=flat&color=41BDF5&label=Downloads)](https://github.com/eigger/hass-ble-led-sign/releases)
 <!-- hass-standards:badges:end -->
-
-**English** | [한국어](README.ko.md)
-
-BLE LED Sign is a unified Home Assistant integration for controlling Bluetooth Low Energy (BLE) matrix LED displays (CoolLED, iLed, iPixel Color). Automate scrolling text, static messages, graphics, and dynamic layouts from Home Assistant instead of vendor mobile apps.
+<!-- hass-standards:header:end -->
 
 ## Supported devices
 
@@ -31,6 +33,10 @@ Full hardware details and color capabilities are documented in the [User Guide](
 - **Bluetooth**: A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md) with `active: true` configured.
 
 ## Installation
+
+<!-- hass-standards:installation:start -->
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign&category=integration)
+<!-- hass-standards:installation:end -->
 
 ### Via HACS (Recommended)
 
@@ -100,3 +106,21 @@ For more examples, animations, and image rendering syntax, refer to the [User Gu
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+- [Payload action examples](docs/payload.md): Runnable layouts and device output settings.
+
+<!-- hass-standards:support:start -->
+## Support
+
+- [Issues](https://github.com/eigger/hass-ble-led-sign/issues): Report bugs or request features.
+- [Discussions](https://github.com/eigger/hass-ble-led-sign/discussions): Ask questions and share your experience.
+<!-- hass-standards:support:end -->
+
+<!-- hass-standards:related-projects:start -->
+<!-- hass-standards:related-projects:end -->
+
+<!-- hass-standards:license:start -->
+## License
+
+Released under the [MIT License](LICENSE).
+<!-- hass-standards:license:end -->

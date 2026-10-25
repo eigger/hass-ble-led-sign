@@ -188,3 +188,12 @@ DOC-08 docs/payload.ko.md: [Errno 2] No such file or directory: 'docs/payload.ko
 DOC-08 README.ko.md: README must link its matching-language local payload guide
 ```
 - 독립 리뷰: 별도 review_checker_rollout 담당자가 19개 리포의 workflow 69개·기존 job 100개를 구조 비교했습니다. 새 CI 회귀 지적 없음. 기존 job ID·입력·권한·지원 최소와 통합 코드 보존 및 새 standards job의 중앙 템플릿 일치 확인. 실행 변경 없는 이 기록 추가 전 작업 트리를 검토했습니다.
+
+## 2026-10-25 CI 실패 수정
+
+- 대상: 기존 검사기 갱신 PR #18의 실제 실패를 수정했습니다. 지원 최소 HA 2025.1.0, imagespec>=1.1.0 및 blesession>=0.9.0은 보존합니다.
+- README 본문과 기존 예제를 보존하고 중앙 관리 영역·metadata·payload 언어별 문서와 등록된 실행 YAML 2개를 추가했습니다. 실제 CoolLED 48×12 단색 패널 경로로 HA 템플릿과 imagespec 렌더링을 검증합니다.
+- 실제 write action의 기존 확장 가능한 data/target API를 유지하면서 production voluptuous schema를 등록했습니다. 실제 HA entry와 서비스 등록, 생산 renderer·font/palette context를 사용하는 DOC-08 adapter이며 BLE 명령은 전송하지 않습니다.
+- 중앙 fixture·빈 package 파일·실제 플랫폼/진단/coordinate 테스트 4개와 배포용 번역을 보완했습니다. manifest category media_entertainment는 실제 LED 매트릭스 표시 제품 용도와 검토한 공식 taxonomy 근거를 기록했으며 published validator schema 지연에는 검토한 공식 Core validator를 사용합니다.
+- 로컬 current 환경: Python 3.14.5 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 / imagespec 1.1.0 / blesession 0.9.0. `pip check`, 중앙 check_integration.py, Ruff lint/format, actionlint 및 git diff --check PASS. 실제 payload 계약 2 passed, 기존 회귀 및 새 HA 검사 75 passed (Pillow getdata deprecation warnings는 기존 코드 경로).
+- 정확한 최소 HA 및 최종 PR head의 원격 CI는 아래 후속 결과와 PR Checks를 참조하며 current 환경의 성공을 소급하지 않습니다. 실물 전광판 출력은 검증하지 않았습니다.

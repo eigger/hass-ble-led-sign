@@ -13,5 +13,57 @@
   "installation_links": {
     "README.md": "#installation",
     "README.ko.md": "#설치"
+  },
+  "categories_review": {
+    "value": [
+      "media_entertainment"
+    ],
+    "integration_type": null,
+    "source": "README Supported devices and production drivers support CoolLED/iLed/iPixel matrix LED displays for visual text and image media. The official Core taxonomy snapshot ec18d8b25d1ee39aa8b85a72a170e42bee33228c provides media_entertainment as the actual display product purpose; these are not general lighting bulbs."
+  },
+  "readme": {
+    "title": "BLE LED Sign",
+    "descriptions": {
+      "en": "BLE LED Sign is a unified Home Assistant integration for controlling Bluetooth Low Energy (BLE) matrix LED displays (CoolLED, iLed, iPixel Color). Automate scrolling text, static messages, graphics, and dynamic layouts from Home Assistant instead of vendor mobile apps.",
+      "ko": "BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, iLed, iPixel Color 등)을 제어하기 위한 Home Assistant 통합구성요소입니다. 제조사 전용 스마트폰 앱 대신 Home Assistant에서 직접 스크롤 텍스트, 상태 메시지, 그래픽 및 동적 레이아웃을 자동화할 수 있습니다."
+    },
+    "issues": true,
+    "discussions": true,
+    "license_name": "MIT License",
+    "related_projects": []
+  },
+  "payload": {
+    "examples": [
+      {
+        "path": "examples/payload/minimal.yaml",
+        "payload_path": [
+          "data",
+          "payload"
+        ],
+        "expected_size": [
+          48,
+          12
+        ],
+        "expected_palette": [
+          "#000000",
+          "#ffffff"
+        ]
+      },
+      {
+        "path": "examples/payload/template.yaml",
+        "payload_path": [
+          "data",
+          "payload"
+        ],
+        "expected_size": [
+          48,
+          12
+        ],
+        "expected_palette": [
+          "#000000",
+          "#ffffff"
+        ]
+      }
+    ]
   }
 }
