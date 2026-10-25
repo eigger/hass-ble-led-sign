@@ -205,3 +205,11 @@ DOC-08 README.ko.md: README must link its matching-language local payload guide
 - 정확한 최소: Python 3.13.14 / HA 2025.1.0 / 플러그인 0.13.201 / imagespec 1.1.0 / blesession 0.9.0, payload 계약 2 passed, 회귀 76 passed. minimum requirements와 manifest를 함께 resolver에 입력했고 HA 자체의 고정 prerelease 의존성 때문에 로컬 uv에 prerelease=allow를 지정했습니다. 설치 패키지 버전 변경이나 --no-deps 사용은 없습니다.
 - 양 환경 pip check PASS. 최종 실행 코드에서 중앙 검사·Ruff lint/format·actionlint·git diff --check PASS. 첫 수정 head 6d13789의 원격 Validate는 success이며 최종 추가 호환성 커밋의 CI는 PR #18의 최신 Checks를 확인합니다.
 - 최종 독립 리뷰(root): 실제 production renderer/schema context, HA payload target/service 준비, 팔레트·크기 일치, 플랫폼/보고서/개인정보 테스트 및 번역 scaffold를 검토했습니다. schema가 기존 background/dry_run/rotate 입력을 제한하던 지적은 실제 레거시 작업 회귀 검사와 함께 해결됐으며 남은 actionable 지적은 없습니다.
+
+
+### 2026-10-25 Standards workflow 분리 검증
+
+- 분리 시작 커밋: `f7407cd0301dd379f9f1c72151d010fa093139d5`; 검토 중앙 소스 `ca740d88b32fa5dcbc94c41fce2908450c76ed50` (중앙 PR #24). Validate는 HACS/Hassfest job을 그대로 유지하며 중앙 job만 standards.yml로 이동하고 표시 이름을 Standards로 변경합니다.
+- 독립 리뷰: root 구현의 19개 리포에 대해 별도 fix_scale_atflee_ci 담당자가 Validate job 19개와 이동 job 19개의 YAML 정의를 비교했습니다. 파일 이동·표시 이름 외 실제 검사 단계·이벤트·권한·timeout·입력 변경 없음. 중앙 위치 인식 변경은 root가 별도 독립 리뷰했습니다.
+- 로컬: 새 중앙 검사기·actionlint·diff 검사 PASS. 중앙 전체232개·관련38개 회귀 테스트와 양 배치19개 동등성 검사 PASS. 모든 대상 기본 브랜치의 branch protection·rulesets 조회에서 필수 검사 이름 설정이 없어 이름 변경으로 인한 대기 충돌 없음. 원격 CI는 이 PR의 최신 head에서 확인합니다.
+- 검사 기준을 추가하거나 완화하지 않았으며 기존 inline 배치도 같은 기준으로 지원합니다. 실제 runtime·지원 최소·의존성은 이 파일 분리에서 변경하지 않습니다.
