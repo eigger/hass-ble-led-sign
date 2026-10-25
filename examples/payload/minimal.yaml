@@ -1,0 +1,12 @@
+action: ble_led_sign.write
+target:
+  entity_id: light.ble_led_sign_display_power
+data:
+  background: black
+  payload:
+    - type: rectangle
+      x_start: 0
+      y_start: 0
+      x_end: 12
+      y_end: 11
+      fill: white

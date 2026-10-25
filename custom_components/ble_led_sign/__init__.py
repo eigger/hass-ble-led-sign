@@ -7,6 +7,7 @@ from asyncio import Lock
 from functools import partial
 from typing import Any
 
+import voluptuous as vol
 from blesession import SessionReports
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -127,6 +128,13 @@ def _resolve_driver(entry: BleLedSignConfigEntry, data: BleLedSignBluetoothDevic
         return None
 
 
+# Keep the existing extensible write API while exposing its real schema to HA.
+WRITE_SERVICE_SCHEMA = vol.Schema(
+    {vol.Optional("payload"): object},
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -> bool:
     """Set up a BLE LED sign from a config entry."""
     if DOMAIN not in hass.data:
@@ -223,7 +231,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
                 "set_music": set_music_service,
                 "send_command": send_command_service,
             }[service_name]
-            hass.services.async_register(DOMAIN, service_name, handler)
+            hass.services.async_register(
+                DOMAIN,
+                service_name,
+                handler,
+                schema=WRITE_SERVICE_SCHEMA if service_name == "write" else None,
+            )
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

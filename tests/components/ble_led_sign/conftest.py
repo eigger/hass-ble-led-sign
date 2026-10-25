@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+# <!-- hass-standards:domain-fixtures:start -->
+# Use pytest_homeassistant_custom_component.common.MockConfigEntry for
+# mock_config_entry when the integration uses config entries.
+# Define mock_client only when an external communication client is present.
+# Mock external communication boundaries, never Home Assistant core modules.
+# Keep integration-specific fixtures below this managed block.
+# <!-- hass-standards:domain-fixtures:end -->
 from time import monotonic
 from typing import Any
 
@@ -249,3 +256,66 @@ def entity_id(hass: HomeAssistant):
         raise KeyError(f"Entity not found: {domain=} {translation_key=}")
 
     return lookup
+
+
+@pytest.fixture
+def mock_config_entry(entry):
+    """Use the actual configured HA entry for central lifecycle contracts."""
+    return entry
+
+
+@pytest.fixture
+def mock_client(transport):
+    """The external BLE GATT boundary used by this integration."""
+    return transport
+
+
+@pytest.fixture
+async def payload_example_setup(hass, loaded_entry, entity_id):
+    """Load the real entry and give the documented target its user-facing ID."""
+    from homeassistant.helpers import entity_registry as er
+
+    registry = er.async_get(hass)
+    current = entity_id("light", "display")
+    target = "light.ble_led_sign_display_power"
+    if current != target:
+        registry.async_update_entity(current, new_entity_id=target)
+    await hass.async_block_till_done()
+    return loaded_entry
+
+
+@pytest.fixture
+def payload_example_adapter(loaded_entry):
+    """Bind the production renderer and its actual output context without GATT I/O."""
+    from functools import partial
+    from inspect import signature
+
+    from homeassistant.core import ServiceCall
+
+    from custom_components.ble_led_sign.drivers.coolled.colors import get_palette
+    from custom_components.ble_led_sign.renderer import _make_context, render_image
+
+    def factory(hass, metadata, action, schema_data):
+        from hass_standards_payload import PreparedPayload
+
+        device = hass.data[DOMAIN][loaded_entry.entry_id]["data"].device
+        palette = list(dict.fromkeys(get_palette(device.color_type).values()))
+        context = _make_context(hass, default_font="Galmuri14.ttf", palette=palette)
+        service_kwargs = {"domain": DOMAIN, "service": "write", "data": schema_data}
+        if "hass" in signature(ServiceCall).parameters:
+            service_kwargs["hass"] = hass
+        service = ServiceCall(**service_kwargs)
+        return PreparedPayload(
+            payload=schema_data["payload"],
+            context=context,
+            render_options={
+                "width": device.width,
+                "height": device.height,
+                "rotate": int(schema_data.get("rotate", 0)),
+                "rotate_mode": "canvas",
+                "background": schema_data.get("background", "black"),
+            },
+            prepare=partial(render_image, loaded_entry.entry_id, device, service, hass),
+        )
+
+    return factory

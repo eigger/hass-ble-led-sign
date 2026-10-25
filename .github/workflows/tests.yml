@@ -1,11 +1,10 @@
 name: Tests
-on:
+'on':
   push:
-    branches: [main, master]
-  pull_request:
-  workflow_dispatch:
-  schedule:
-    - cron: "23 4 * * 1"
+    branches:
+    - master
+  pull_request: null
+  workflow_dispatch: null
 permissions:
   contents: read
 concurrency:
@@ -13,8 +12,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   current:
-    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
+    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@ca740d88b32fa5dcbc94c41fce2908450c76ed50 # reviewed standards commit
     with:
+      standards-ref: ca740d88b32fa5dcbc94c41fce2908450c76ed50
       domain: ble_led_sign
       python-versions: '["3.14"]'
       lint-python-version: '3.14'
@@ -25,8 +25,9 @@ jobs:
       dependency-modes: '["current", "minimum"]'
       minimum-packages: '["imagespec", "blesession"]'
   minimum-ha:
-    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@c3f2e254c0867f1825ca8f636c347582e06707db # reviewed standards commit
+    uses: eigger/hass-repo-standards/.github/workflows/python-tests.yml@ca740d88b32fa5dcbc94c41fce2908450c76ed50 # reviewed standards commit
     with:
+      standards-ref: ca740d88b32fa5dcbc94c41fce2908450c76ed50
       domain: ble_led_sign
       python-versions: '["3.13"]'
       requirements: requirements_test_min.txt

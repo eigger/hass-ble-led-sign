@@ -1,4 +1,9 @@
+<!-- hass-standards:header:start -->
 # BLE LED Sign
+
+BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, iLed, iPixel Color 등)을 제어하기 위한 Home Assistant 통합구성요소입니다. 제조사 전용 스마트폰 앱 대신 Home Assistant에서 직접 스크롤 텍스트, 상태 메시지, 그래픽 및 동적 레이아웃을 자동화할 수 있습니다.
+
+[English](README.md) | **한국어**
 
 <!-- hass-standards:badges:start -->
 [![Release](https://img.shields.io/github/v/release/eigger/hass-ble-led-sign?style=flat)](https://github.com/eigger/hass-ble-led-sign/releases)
@@ -9,10 +14,7 @@
 [![License](https://img.shields.io/github/license/eigger/hass-ble-led-sign?style=flat)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/eigger/hass-ble-led-sign/total?style=flat&color=41BDF5&label=Downloads)](https://github.com/eigger/hass-ble-led-sign/releases)
 <!-- hass-standards:badges:end -->
-
-[English](README.md) | **한국어**
-
-BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, iLed, iPixel Color 등)을 제어하기 위한 Home Assistant 통합구성요소입니다. 제조사 전용 스마트폰 앱 대신 Home Assistant에서 직접 스크롤 텍스트, 상태 메시지, 그래픽 및 동적 레이아웃을 자동화할 수 있습니다.
+<!-- hass-standards:header:end -->
 
 ## 지원 기기
 
@@ -31,6 +33,10 @@ BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, 
 - **블루투스**: 로컬 블루투스 어댑터 또는 `active: true`로 설정된 [ESPHome 블루투스 프록시](https://github.com/eigger/blesession/blob/main/docs/bluetooth.ko.md).
 
 ## 설치
+
+<!-- hass-standards:installation:start -->
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign&category=integration)
+<!-- hass-standards:installation:end -->
 
 ### HACS를 통한 설치 (권장)
 
@@ -100,3 +106,21 @@ data:
 ## 라이선스
 
 이 프로젝트는 [MIT License](LICENSE)에 따라 제공됩니다.
+
+- [Payload 작업 예제](docs/payload.ko.md): 실행 가능한 레이아웃과 기기 출력 설정.
+
+<!-- hass-standards:support:start -->
+## 지원
+
+- [Issues](https://github.com/eigger/hass-ble-led-sign/issues): 버그를 신고하거나 기능을 요청하세요.
+- [Discussions](https://github.com/eigger/hass-ble-led-sign/discussions): 질문하고 사용 경험을 공유하세요.
+<!-- hass-standards:support:end -->
+
+<!-- hass-standards:related-projects:start -->
+<!-- hass-standards:related-projects:end -->
+
+<!-- hass-standards:license:start -->
+## 라이선스
+
+[MIT License](LICENSE) 라이선스로 배포됩니다.
+<!-- hass-standards:license:end -->

@@ -1,0 +1,13 @@
+action: ble_led_sign.write
+target:
+  entity_id: light.ble_led_sign_display_power
+data:
+  rotate: 0
+  background: black
+  payload:
+    - type: text
+      value: "{{ 'HA' }}"
+      x: 1
+      y: 0
+      size: 10
+      color: white

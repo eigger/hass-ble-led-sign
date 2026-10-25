@@ -153,3 +153,63 @@ Scoped implementation reference: hass-repo-standards `3897aaa8564e8e22582d728435
 - English/Korean DOC-07 troubleshooting updated; the prior Korean URL is retained as a forwarding document. Support minimum stays HA 2025.1.0; runtime manifest adds `blesession>=0.9.0`; CI minimum-package and updater selections include it.
 
 Verification (real HA fixtures, mocked external BLE boundary): Python 3.14.7 / HA 2026.10.2 / pytest HA plugin 0.13.373: **55 passed**; Python 3.13.15 / HA 2025.1.0 / plugin 0.13.201: **55 passed**. Both install blesession 0.9.0 and imagespec 1.1.0; both `uv pip check` pass. Ruff lint/format, `git diff --check`, and the central DOC-07 checker pass. New regression coverage includes recovery/error retention, unreachable devices, rejected/silent authentication, dropped notification waits, bounded writes, cancellation/unload cleanup, report fallback/redaction, route lookup under lock and iPixel metadata preservation. No physical panel, proxy hardware, live HA UI or remote CI was tested in this change.
+
+
+## 2026-10-25 중앙 검사기 부분 갱신 검증
+
+- 검토한 중앙 SHA: `1863343638014adb8a4001afc8fddc1a27dc500f`; 적용 시작 커밋: `f3cfad2a666231105e29ea2536a5a286ad5f3350`.
+- 범위: 중앙 pin·standards-ref·검토 기준 기록 정합화 및 누락 standards job 추가. HA 구현·요구 버전은 유지합니다.
+- 로컬: Python 3.14.5 / PyYAML 6.0.3, `python scripts/check_integration.py <target>` (검토한 중앙 source에서 실행): FAIL — 아래 미충족 항목을 확인했으며 성공으로 표시하지 않음.
+- actionlint: PASS. PR CI·독립 리뷰 결과는 PR 링크와 check 결과를 확인합니다. 이 로컬 결과만으로 전체 채택 완료를 주장하지 않습니다.
+- 수정 전에도 최신 검사기로 검사 시 31개 진단이 있었습니다. 이번 검사기가 드러내는 잔여 항목은 다음과 같습니다. 승인 예외나 실패 무시를 추가하지 않았습니다.
+
+```text
+DOC-01 README.md: Exactly one ordered header marker pair required
+DOC-01 README.ko.md: Exactly one ordered header marker pair required
+HA-02 custom_components/ble_led_sign/manifest.json: categories requires 1–3 actual product categories (HA-02 project policy)
+TEST-08 tests/components/ble_led_sign/test_binary_sensor.py: Required contract file is missing
+TEST-08 tests/components/ble_led_sign/test_sensor.py: Required contract file is missing
+TEST-08 tests/components/ble_led_sign/test_coordinator.py: Required contract file is missing
+TEST-08 tests/components/ble_led_sign/test_diagnostics.py: Required contract file is missing
+TEST-08 tests/components/ble_led_sign/test_payload_examples.py: Required contract file is missing
+HA-13 custom_components/__init__.py: Required contract file is missing
+HA-11 custom_components/ble_led_sign/translations/ko.json: Unresolved Core translation reference
+HA-11 custom_components/ble_led_sign/translations/en.json: English deployment translations must match strings.json source
+TEST-08 tests/__init__.py: must exist and be empty
+TEST-08 tests/components/__init__.py: must exist and be empty
+TEST-08 tests/components/ble_led_sign/__init__.py: must exist and be empty
+TEST-03 tests/conftest.py: must match the central template exactly
+TEST-08 tests/components/ble_led_sign/conftest.py: Exactly one ordered domain-fixtures marker pair required
+DOC-08 .hass-standards.json: 'payload'
+DOC-08 tests/components/ble_led_sign/test_payload_examples.py: [Errno 2] No such file or directory: 'tests/components/ble_led_sign/test_payload_examples.py'
+DOC-08 docs/payload.md: [Errno 2] No such file or directory: 'docs/payload.md'
+DOC-08 README.md: README must link its matching-language local payload guide
+DOC-08 docs/payload.ko.md: [Errno 2] No such file or directory: 'docs/payload.ko.md'
+DOC-08 README.ko.md: README must link its matching-language local payload guide
+```
+- 독립 리뷰: 별도 review_checker_rollout 담당자가 19개 리포의 workflow 69개·기존 job 100개를 구조 비교했습니다. 새 CI 회귀 지적 없음. 기존 job ID·입력·권한·지원 최소와 통합 코드 보존 및 새 standards job의 중앙 템플릿 일치 확인. 실행 변경 없는 이 기록 추가 전 작업 트리를 검토했습니다.
+
+## 2026-10-25 CI 실패 수정
+
+- 대상: 기존 검사기 갱신 PR #18의 실제 실패를 수정했습니다. 지원 최소 HA 2025.1.0, imagespec>=1.1.0 및 blesession>=0.9.0은 보존합니다.
+- README 본문과 기존 예제를 보존하고 중앙 관리 영역·metadata·payload 언어별 문서와 등록된 실행 YAML 2개를 추가했습니다. 실제 CoolLED 48×12 단색 패널 경로로 HA 템플릿과 imagespec 렌더링을 검증합니다.
+- 실제 write action의 기존 확장 가능한 data/target API를 유지하면서 production voluptuous schema를 등록했습니다. 실제 HA entry와 서비스 등록, 생산 renderer·font/palette context를 사용하는 DOC-08 adapter이며 BLE 명령은 전송하지 않습니다.
+- 중앙 fixture·빈 package 파일·실제 플랫폼/진단/coordinate 테스트 4개와 배포용 번역을 보완했습니다. manifest category media_entertainment는 실제 LED 매트릭스 표시 제품 용도와 검토한 공식 taxonomy 근거를 기록했으며 published validator schema 지연에는 검토한 공식 Core validator를 사용합니다.
+- 로컬 current 환경: Python 3.14.5 / HA 2026.10.2 / pytest-homeassistant-custom-component 0.13.373 / imagespec 1.1.0 / blesession 0.9.0. `pip check`, 중앙 check_integration.py, Ruff lint/format, actionlint 및 git diff --check PASS. 실제 payload 계약 2 passed, 기존 회귀 및 새 HA 검사 75 passed (Pillow getdata deprecation warnings는 기존 코드 경로).
+- 정확한 최소 HA 및 최종 PR head의 원격 CI는 아래 후속 결과와 PR Checks를 참조하며 current 환경의 성공을 소급하지 않습니다. 실물 전광판 출력은 검증하지 않았습니다.
+
+### CI 수정 후 최소/current 재검증 및 호환성 리뷰
+
+- 독립 리뷰의 API 호환성 지적을 반영하여 write schema는 기존 payload와 추가 data/target 필드를 그대로 허용합니다. 실제 HA 작업 호출 회귀 검사는 RGB tuple 배경·문자열 회전값·truthy dry_run·추가 필드가 유지됨을 검증합니다.
+- current: Python 3.14.5 / HA 2026.10.2 / 플러그인 0.13.373 / imagespec 1.1.0 / blesession 0.9.0, payload 계약 2 passed, 회귀 76 passed. 기존 Pillow getdata deprecation 경고 92건은 통과로 숨기거나 필터링하지 않았습니다.
+- 정확한 최소: Python 3.13.14 / HA 2025.1.0 / 플러그인 0.13.201 / imagespec 1.1.0 / blesession 0.9.0, payload 계약 2 passed, 회귀 76 passed. minimum requirements와 manifest를 함께 resolver에 입력했고 HA 자체의 고정 prerelease 의존성 때문에 로컬 uv에 prerelease=allow를 지정했습니다. 설치 패키지 버전 변경이나 --no-deps 사용은 없습니다.
+- 양 환경 pip check PASS. 최종 실행 코드에서 중앙 검사·Ruff lint/format·actionlint·git diff --check PASS. 첫 수정 head 6d13789의 원격 Validate는 success이며 최종 추가 호환성 커밋의 CI는 PR #18의 최신 Checks를 확인합니다.
+- 최종 독립 리뷰(root): 실제 production renderer/schema context, HA payload target/service 준비, 팔레트·크기 일치, 플랫폼/보고서/개인정보 테스트 및 번역 scaffold를 검토했습니다. schema가 기존 background/dry_run/rotate 입력을 제한하던 지적은 실제 레거시 작업 회귀 검사와 함께 해결됐으며 남은 actionable 지적은 없습니다.
+
+
+### 2026-10-25 Standards workflow 분리 검증
+
+- 분리 시작 커밋: `f7407cd0301dd379f9f1c72151d010fa093139d5`; 검토 중앙 소스 `ca740d88b32fa5dcbc94c41fce2908450c76ed50` (중앙 PR #24). Validate는 HACS/Hassfest job을 그대로 유지하며 중앙 job만 standards.yml로 이동하고 표시 이름을 Standards로 변경합니다.
+- 독립 리뷰: root 구현의 19개 리포에 대해 별도 fix_scale_atflee_ci 담당자가 Validate job 19개와 이동 job 19개의 YAML 정의를 비교했습니다. 파일 이동·표시 이름 외 실제 검사 단계·이벤트·권한·timeout·입력 변경 없음. 중앙 위치 인식 변경은 root가 별도 독립 리뷰했습니다.
+- 로컬: 새 중앙 검사기·actionlint·diff 검사 PASS. 중앙 전체232개·관련38개 회귀 테스트와 양 배치19개 동등성 검사 PASS. 모든 대상 기본 브랜치의 branch protection·rulesets 조회에서 필수 검사 이름 설정이 없어 이름 변경으로 인한 대기 충돌 없음. 원격 CI는 이 PR의 최신 head에서 확인합니다.
+- 검사 기준을 추가하거나 완화하지 않았으며 기존 inline 배치도 같은 기준으로 지원합니다. 실제 runtime·지원 최소·의존성은 이 파일 분리에서 변경하지 않습니다.
