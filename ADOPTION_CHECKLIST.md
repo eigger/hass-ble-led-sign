@@ -204,3 +204,4 @@ DOC-08 README.ko.md: README must link its matching-language local payload guide
 - current: Python 3.14.5 / HA 2026.10.2 / 플러그인 0.13.373 / imagespec 1.1.0 / blesession 0.9.0, payload 계약 2 passed, 회귀 76 passed. 기존 Pillow getdata deprecation 경고 92건은 통과로 숨기거나 필터링하지 않았습니다.
 - 정확한 최소: Python 3.13.14 / HA 2025.1.0 / 플러그인 0.13.201 / imagespec 1.1.0 / blesession 0.9.0, payload 계약 2 passed, 회귀 76 passed. minimum requirements와 manifest를 함께 resolver에 입력했고 HA 자체의 고정 prerelease 의존성 때문에 로컬 uv에 prerelease=allow를 지정했습니다. 설치 패키지 버전 변경이나 --no-deps 사용은 없습니다.
 - 양 환경 pip check PASS. 최종 실행 코드에서 중앙 검사·Ruff lint/format·actionlint·git diff --check PASS. 첫 수정 head 6d13789의 원격 Validate는 success이며 최종 추가 호환성 커밋의 CI는 PR #18의 최신 Checks를 확인합니다.
+- 최종 독립 리뷰(root): 실제 production renderer/schema context, HA payload target/service 준비, 팔레트·크기 일치, 플랫폼/보고서/개인정보 테스트 및 번역 scaffold를 검토했습니다. schema가 기존 background/dry_run/rotate 입력을 제한하던 지적은 실제 레거시 작업 회귀 검사와 함께 해결됐으며 남은 actionable 지적은 없습니다.
