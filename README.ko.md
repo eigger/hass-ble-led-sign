@@ -12,7 +12,7 @@ BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, 
 [![Tests](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/tests.yml?branch=master&style=flat&label=Tests)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/tests.yml)
 [![Validate](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/validate.yml?branch=master&style=flat&label=Validate)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/validate.yml)
 [![License](https://img.shields.io/github/license/eigger/hass-ble-led-sign?style=flat)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/eigger/hass-ble-led-sign/total?style=flat&color=41BDF5&label=Downloads)](https://github.com/eigger/hass-ble-led-sign/releases)
+[![Downloads](https://img.shields.io/github/downloads/eigger/hass-ble-led-sign/latest/total?style=flat&color=41BDF5&label=Downloads)](https://github.com/eigger/hass-ble-led-sign/releases)
 <!-- hass-standards:badges:end -->
 <!-- hass-standards:header:end -->
 
