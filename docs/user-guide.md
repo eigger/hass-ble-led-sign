@@ -115,7 +115,7 @@ data:
   dry_run: false
 ```
 
-> **Admin only:** `send_text`, `send_image`, `send_animation` and `send_jt` read local files (`font`, `image_path`, `jt_path`), so they can only be called by administrator users. Automations and scripts run without a user context and are not affected.
+> **Admin only:** `send_text`, `send_image`, `send_animation` and `send_jt` read local files (`font`, `image_path`, `jt_path`), so they can only be called by administrator users. Automations run without a user context and are not affected; scripts or dashboard actions started by a non-admin user are rejected.
 
 ### `ble_led_sign.send_text`
 
