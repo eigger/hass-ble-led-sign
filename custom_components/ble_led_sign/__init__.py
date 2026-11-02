@@ -20,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 try:
@@ -66,7 +67,7 @@ from .drivers.coolled.text import (
     resolve_text_color,
 )
 from .renderer import render_image
-from .services import SERVICE_NAMES
+from .services import ADMIN_SERVICE_NAMES, SERVICE_NAMES
 from .types import BleLedSignConfigEntry
 
 PLATFORMS: list[Platform] = [
@@ -231,12 +232,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleLedSignConfigEntry) -
                 "set_music": set_music_service,
                 "send_command": send_command_service,
             }[service_name]
-            hass.services.async_register(
-                DOMAIN,
-                service_name,
-                handler,
-                schema=WRITE_SERVICE_SCHEMA if service_name == "write" else None,
-            )
+            schema = WRITE_SERVICE_SCHEMA if service_name == "write" else None
+            if service_name in ADMIN_SERVICE_NAMES:
+                async_register_admin_service(
+                    hass, DOMAIN, service_name, handler, schema=schema
+                )
+            else:
+                hass.services.async_register(
+                    DOMAIN, service_name, handler, schema=schema
+                )
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
