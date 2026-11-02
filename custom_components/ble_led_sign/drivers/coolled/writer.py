@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from asyncio import sleep
+from asyncio import sleep, to_thread
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
@@ -274,8 +274,8 @@ async def send_animation(
     invert: bool = False,
 ) -> bool:
     async def _action(client: CoolledClient) -> None:
-        frames, detected_speed = load_animated_images(
-            image_path, device.columns, device.rows
+        frames, detected_speed = await to_thread(
+            load_animated_images, image_path, device.columns, device.rows
         )
         frame_data = images_to_animation_bytes(
             frames,
@@ -302,7 +302,7 @@ async def send_jt(
     jt_path: str,
 ) -> bool:
     async def _action(client: CoolledClient) -> None:
-        command, payload_body, _, _ = parse_jt_file(jt_path)
+        command, payload_body, _, _ = await to_thread(parse_jt_file, jt_path)
         await client.send_payload_transfer(command, payload_body)
 
     return await _with_client(ble_device, device, password, write_delay_ms, _action)

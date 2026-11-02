@@ -8,9 +8,10 @@ into 244-byte BLE writes and acknowledged via 0xFA03 notifications.
 from __future__ import annotations
 
 import logging
-from asyncio import sleep
+from asyncio import sleep, to_thread
 from collections.abc import Sequence
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 from bleak import BleakClient
@@ -282,8 +283,7 @@ async def send_animation(
     save_slot: int = 0,
 ) -> bool:
     """Send an animated GIF file."""
-    with open(image_path, "rb") as handle:
-        file_bytes = handle.read()
+    file_bytes = await to_thread(Path(image_path).read_bytes)
     return await send_file(
         ble_device, device, write_delay_ms, file_bytes, True, save_slot
     )
