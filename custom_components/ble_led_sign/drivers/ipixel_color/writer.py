@@ -8,9 +8,10 @@ into 244-byte BLE writes and acknowledged via 0xFA03 notifications.
 from __future__ import annotations
 
 import logging
-from asyncio import sleep
+from asyncio import sleep, to_thread
 from collections.abc import Sequence
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 from bleak import BleakClient
@@ -253,7 +254,7 @@ async def send_file(
         client.write_delay_ms = write_delay_ms
         width, height = await client.query_dimensions()
         _apply_dimensions(device, width, height)
-        resized = resize_image_bytes(file_bytes, is_gif, width, height)
+        resized = await to_thread(resize_image_bytes, file_bytes, is_gif, width, height)
         await client.send_windows(build_content_windows(resized, is_gif, save_slot))
 
     return await _with_client(ble_device, device, _action)
@@ -267,10 +268,14 @@ async def send_image(
     save_slot: int = 0,
 ) -> bool:
     """Send a still PIL image."""
-    buf = BytesIO()
-    image.convert("RGB").save(buf, format="PNG")
+
+    def _encode() -> bytes:
+        buf = BytesIO()
+        image.convert("RGB").save(buf, format="PNG")
+        return buf.getvalue()
+
     return await send_file(
-        ble_device, device, write_delay_ms, buf.getvalue(), False, save_slot
+        ble_device, device, write_delay_ms, await to_thread(_encode), False, save_slot
     )
 
 
@@ -282,8 +287,7 @@ async def send_animation(
     save_slot: int = 0,
 ) -> bool:
     """Send an animated GIF file."""
-    with open(image_path, "rb") as handle:
-        file_bytes = handle.read()
+    file_bytes = await to_thread(Path(image_path).read_bytes)
     return await send_file(
         ble_device, device, write_delay_ms, file_bytes, True, save_slot
     )
@@ -309,15 +313,17 @@ async def send_text(
         client.write_delay_ms = write_delay_ms
         width, height = await client.query_dimensions()
         _apply_dimensions(device, width, height)
-        payload = encode_text_payload(
-            text,
-            char_height_for(height),
-            text_color,
-            animation=animation,
-            speed=speed,
-            rainbow=rainbow,
-            bg_color=bg_color,
-            font_path=font_path,
+        payload = await to_thread(
+            lambda: encode_text_payload(
+                text,
+                char_height_for(height),
+                text_color,
+                animation=animation,
+                speed=speed,
+                rainbow=rainbow,
+                bg_color=bg_color,
+                font_path=font_path,
+            )
         )
         await client.send_windows(build_text_windows(payload, save_slot))
 
