@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ble_led_sign.const import DOMAIN
-from custom_components.ble_led_sign.services import SERVICE_NAMES
+from custom_components.ble_led_sign.services import (
+    ADMIN_SERVICE_NAMES,
+    SERVICE_NAMES,
+)
 
 
 async def test_setup_and_unload(
@@ -96,3 +100,21 @@ async def test_multi_entry_service_cleanup(
     # Now all services should be removed
     for service_name in SERVICE_NAMES:
         assert not hass.services.has_service(DOMAIN, service_name)
+
+
+@pytest.mark.parametrize("service_name", ADMIN_SERVICE_NAMES)
+async def test_file_services_reject_non_admin(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    hass_read_only_user,
+    service_name: str,
+) -> None:
+    """Services that read caller-supplied paths are admin only."""
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service_name,
+            {},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
