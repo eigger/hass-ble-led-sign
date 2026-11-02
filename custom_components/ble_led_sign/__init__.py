@@ -430,13 +430,15 @@ async def _write_label_to_device(
     device = runtime["data"].device
     assert device is not None
     if device.columns and device.rows:
-        _ = image_to_draw_bytes(
-            image,
-            device.columns,
-            device.rows,
-            threshold=threshold,
-            invert=invert,
-            color_type=device.color_type,
+        await hass.async_add_executor_job(
+            lambda: image_to_draw_bytes(
+                image,
+                device.columns,
+                device.rows,
+                threshold=threshold,
+                invert=invert,
+                color_type=device.color_type,
+            )
         )
 
     if dry_run:
@@ -524,7 +526,9 @@ async def _send_image_to_device(
     invert = service.data.get("invert", False)
 
     def _load_image() -> Image.Image:
-        return Image.open(image_path)
+        with Image.open(image_path) as opened:
+            opened.load()
+            return opened.copy()
 
     image = await hass.async_add_executor_job(_load_image)
     runtime = hass.data[DOMAIN][entry_id]
@@ -533,13 +537,15 @@ async def _send_image_to_device(
         raise HomeAssistantError("Device metadata is not ready yet")
 
     if device.columns and device.rows:
-        _ = image_to_draw_bytes(
-            image,
-            device.columns,
-            device.rows,
-            threshold=threshold,
-            invert=invert,
-            color_type=device.color_type,
+        await hass.async_add_executor_job(
+            lambda: image_to_draw_bytes(
+                image,
+                device.columns,
+                device.rows,
+                threshold=threshold,
+                invert=invert,
+                color_type=device.color_type,
+            )
         )
 
     save_slot = int(service.data.get("save_slot", 0))

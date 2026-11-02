@@ -171,11 +171,13 @@ class CoolledClient:
         text_color: tuple[int, int, int] = (255, 255, 255),
     ) -> None:
         await self._write(cmd_begin_transfer())
-        frames = build_text_frames(
-            text,
-            self.device.rows,
-            color_type=self.device.color_type,
-            text_color=text_color,
+        frames = await to_thread(
+            lambda: build_text_frames(
+                text,
+                self.device.rows,
+                color_type=self.device.color_type,
+                text_color=text_color,
+            )
         )
         await self._send_chunked_transfer(frames)
 
@@ -250,13 +252,15 @@ async def send_image(
     invert: bool = False,
 ) -> bool:
     async def _action(client: CoolledClient) -> None:
-        bitmap = image_to_draw_bytes(
-            image,
-            device.columns,
-            device.rows,
-            threshold=threshold,
-            invert=invert,
-            color_type=device.color_type,
+        bitmap = await to_thread(
+            lambda: image_to_draw_bytes(
+                image,
+                device.columns,
+                device.rows,
+                threshold=threshold,
+                invert=invert,
+                color_type=device.color_type,
+            )
         )
         await client.send_draw(bitmap)
 
