@@ -16,6 +16,8 @@ BLE LED Sign is a unified Home Assistant integration for controlling Bluetooth L
 <!-- hass-standards:badges:end -->
 <!-- hass-standards:header:end -->
 
+![LED Sign](custom_components/ble_led_sign/brand/logo.png)
+
 ## Supported devices
 
 The integration uses a modular driver architecture supporting multiple hardware families:
