@@ -220,3 +220,10 @@ DOC-08 README.ko.md: README must link its matching-language local payload guide
 - Scope: central `uses`, reusable-workflow `standards-ref`, `.hass-standards.json`, and the current STANDARDS header only. Historical refs (ca740d88b32fa5dcbc94c41fce2908450c76ed50, ca740d88b32fa5dcbc94c41fce2908450c76ed50) remain as evidence; runtime code, dependencies, support minimum, manifest, integration version and tests are unchanged.
 - Verification: Python 3.14 central checker before/after, published immutable release attestation, focused reference/ZIP checks, actionlint and diff check. PR CI and merge remain pending.
 - Review: generated reference change self-review under GOV-05; no device or HA runtime test is claimed for this refs-only PR.
+
+## 2026-11-05 README 형식 부분 변경
+
+- 시작 커밋 `c4c932c961bf9b0cb8c1d36f2a2c29620fcdc714` (`master`). 중앙 작성 기준 [PR #49](https://github.com/eigger/hass-repo-standards/pull/49) 및 [호환성 PR #50](https://github.com/eigger/hass-repo-standards/pull/50)을 참고합니다. 중앙 릴리스 pin `v1.1.5`와 최소 HA 2025.1.0은 유지합니다.
+- 제목·소개·마켓플레이스/HACS 설치를 양언어로 맞추고 기기별 설정·제한·YAML·수동 설치·제거를 보존합니다. 중복 지원·라이선스는 같은 링크·내용을 가진 기존 관리 영역으로 합치고 payload 링크는 문서 절로 배치합니다.
+- [HACS 기본 목록](https://github.com/hacs/default/blob/master/integration)에 `eigger/hass-ble-led-sign`이 있는 것을 2026-11-05 확인해 Default 배지와 설치 링크를 갱신했습니다. 사용자 지정 저장소 대안은 유지합니다.
+- 로컬 Windows Python 3.14.6에서 LF 정규화 snapshot의 v1.1.5 `check_integration.py` 종료 0. README 부분 변경은 전체 재채택이 아니며 실제 UI·실물 기기 검증과 원격 CI는 이 로컬 검사에 포함하지 않습니다.
