@@ -16,6 +16,8 @@ A Home Assistant custom integration that controls CoolLED, iLed and iPixel Color
 <!-- hass-standards:badges:end -->
 <!-- hass-standards:header:end -->
 
+The Downloads badge counts attached asset downloads for the latest GitHub release. It does not measure active installations.
+
 ![LED Sign](custom_components/ble_led_sign/brand/logo.png)
 
 ## Supported devices
@@ -31,8 +33,9 @@ Full hardware details and color capabilities are documented in the [User Guide](
 
 ## Requirements
 
-- **Home Assistant**: `2025.1.0` or newer.
-- **Bluetooth**: A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md) with `active: true` configured.
+- **Home Assistant:** 2025.1.0 or later.
+- **Bluetooth:** A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md) with `active: true` configured.
+- **Device:** A supported sign from [Supported devices](#supported-devices).
 
 ## Installation
 
@@ -40,19 +43,9 @@ Full hardware details and color capabilities are documented in the [User Guide](
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign)
 <!-- hass-standards:installation:end -->
 
-### Marketplace or HACS
-
-1. On Home Assistant 2026.11 or later, open **Settings → Marketplace** and search for **BLE LED Sign**. On earlier supported versions, search in the default HACS integration catalog. The button above opens the repository in the appropriate store.
-2. Download **BLE LED Sign**. Restart Home Assistant if prompted.
-
-If it does not appear in the catalog, add `https://github.com/eigger/hass-ble-led-sign` as a custom integration repository; Marketplace requires a GitHub connection for custom repositories.
-
-### Manual installation
-
-1. Copy the `custom_components/ble_led_sign` folder from this repository into your Home Assistant `<config_dir>/custom_components/` directory.
-2. Restart Home Assistant.
-
-To remove, delete `custom_components/ble_led_sign` and restart Home Assistant.
+1. Click the badge above to open the repository in Marketplace.
+2. If you need to add it yourself, go to **Settings → Marketplace → Add from link** and enter <https://github.com/eigger/hass-ble-led-sign>. Connect GitHub if prompted.
+3. Select **Install**. Restart Home Assistant if prompted, then continue to [Configuration](#configuration).
 
 ## Configuration
 
@@ -93,13 +86,16 @@ For more examples, animations, and image rendering syntax, refer to the [User Gu
 - **Packet Transmission**: Due to BLE MTU limitations, large matrix drawings or animations may experience packet drops on high-noise environments. If writes fail, increase **Retry Count** or **Packet Delay** in the integration options.
 - Review [Troubleshooting](docs/troubleshooting.md) for diagnostic procedures and connection fixes.
 
+### Uninstall
+
+Open the repository in Marketplace, then choose **⋮ → Uninstall**. Follow the prompts to remove any existing setup and restart Home Assistant if prompted.
+
 ## Documentation
 
 - [User Guide](docs/user-guide.md): Comprehensive device profiles, entity catalog, service reference, and `imagespec` declarative layouts.
 - [Troubleshooting](docs/troubleshooting.md): Connection debugging, proxy setup, and diagnostic entities.
 - [Development & Testing](docs/development.md): Development environment setup, test suite execution, and standards compliance.
 - [Shared Bluetooth Proxy Guide](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md): Recommended ESPHome proxy hardware and configurations.
-
 - [Payload action examples](docs/payload.md): Runnable layouts and device output settings.
 
 <!-- hass-standards:support:start -->
