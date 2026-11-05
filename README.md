@@ -16,25 +16,19 @@ A Home Assistant custom integration that controls CoolLED, iLed and iPixel Color
 <!-- hass-standards:badges:end -->
 <!-- hass-standards:header:end -->
 
-The Downloads badge counts attached asset downloads for the latest GitHub release. It does not measure active installations.
-
 ![LED Sign](custom_components/ble_led_sign/brand/logo.png)
 
 ## Supported devices
-
-The integration uses a modular driver architecture supporting multiple hardware families:
 
 | Device family | Driver | Bluetooth Match | Highlights |
 |---------------|--------|-----------------|------------|
 | **CoolLED / iLed** | `coolled` | `CoolLED*`, `iLed*`, UUID `0xFFF0` | Full matrix control, 7-color / full RGB, animations, speed & brightness |
 | **iPixel Color** | `ipixel_color` | `LED_BLE*`, UUID `0x00FA`, `0xAE00` | Real-time text, images, animations, clock/scoreboard control frames |
 
-Full hardware details and color capabilities are documented in the [User Guide](docs/user-guide.md).
-
 ## Requirements
 
 - **Home Assistant:** 2025.1.0 or later.
-- **Bluetooth:** A local Bluetooth adapter or an [ESPHome Bluetooth proxy](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md) with `active: true` configured.
+- **Bluetooth:** A local Bluetooth adapter or an ESPHome Bluetooth proxy with `active: true` configured.
 - **Device:** A supported sign from [Supported devices](#supported-devices).
 
 ## Installation
@@ -49,10 +43,10 @@ Full hardware details and color capabilities are documented in the [User Guide](
 
 ## Configuration
 
-1. In Home Assistant, navigate to **Settings → Devices & Services**.
-2. Click **Add Integration** and search for **BLE LED Sign** (or click Configure if discovered automatically).
-3. Select your discovered sign from the list.
-4. Optional settings such as **Device Password**, **Retry Count**, and **Packet Delay** can be adjusted at any time via **Configure**. See [Configuration Options](docs/user-guide.md#configuration-options) for details.
+1. Under **Settings → Devices & services**, choose **Add integration → BLE LED Sign**, or configure it when discovered.
+2. Select your sign from the list.
+
+Use **Configure** to change [Device Password, Retry Count and Packet Delay](docs/user-guide.md#configuration-options) at any time.
 
 ## Quick start
 
@@ -78,13 +72,10 @@ data:
       color: yellow
 ```
 
-For more examples, animations, and image rendering syntax, refer to the [User Guide](docs/user-guide.md).
-
 ## Important limitations
 
-- **Single Connection Only**: BLE LED signs only support one active connection at a time. Vendor mobile apps (CoolLED1248, iPixel Color) must be fully closed/disconnected for Home Assistant to connect.
-- **Packet Transmission**: Due to BLE MTU limitations, large matrix drawings or animations may experience packet drops on high-noise environments. If writes fail, increase **Retry Count** or **Packet Delay** in the integration options.
-- Review [Troubleshooting](docs/troubleshooting.md) for diagnostic procedures and connection fixes.
+- **One connection at a time.** Close or disconnect vendor apps such as CoolLED1248 or iPixel Color before connecting from Home Assistant.
+- **Packet loss.** BLE MTU limits and radio interference can cause failed writes for large images or animations. Increase **Retry Count** or **Packet Delay** if writes fail.
 
 ### Uninstall
 
@@ -92,7 +83,7 @@ Open the repository in Marketplace, then choose **⋮ → Uninstall**. Follow th
 
 ## Documentation
 
-- [User Guide](docs/user-guide.md): Comprehensive device profiles, entity catalog, service reference, and `imagespec` declarative layouts.
+- [User guide](docs/user-guide.md) — device profiles, color capabilities, entities, actions, animations and `imagespec` layouts.
 - [Troubleshooting](docs/troubleshooting.md): Connection debugging, proxy setup, and diagnostic entities.
 - [Development & Testing](docs/development.md): Development environment setup, test suite execution, and standards compliance.
 - [Shared Bluetooth Proxy Guide](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md): Recommended ESPHome proxy hardware and configurations.
