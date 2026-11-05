@@ -16,6 +16,8 @@ BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, 
 <!-- hass-standards:badges:end -->
 <!-- hass-standards:header:end -->
 
+![LED Sign](custom_components/ble_led_sign/brand/logo.png)
+
 ## 지원 기기
 
 드라이버 기반 아키텍처를 통해 다양한 하드웨어 제품군을 지원합니다:
