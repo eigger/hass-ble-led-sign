@@ -2,13 +2,15 @@
 
 The artwork is an original geometric brand mark on a dark navy rounded square:
 a centered cyan-bezeled LED matrix sign displaying glowing pixel-matrix
-characters on an unlit LED dot grid. Drawn from geometric primitives at 4x scale
-and downsampled, so no source image, external font file, or network access is
-needed. Run with Pillow 12.3.0 for reproducible PNGs.
+characters on an unlit LED dot grid, paired with a crisp Bluetooth rune symbol.
+Drawn from geometric primitives at 4x scale and downsampled, so no source image,
+external font file, or network access is needed. Run with Pillow 12.3.0 for
+reproducible PNGs.
 """
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -48,6 +50,75 @@ COL_COLORS = [
 ]
 
 
+def _draw_thick_polyline(
+    draw: ImageDraw.ImageDraw,
+    pts: list[tuple[float, float]],
+    width: float,
+    color: str,
+) -> None:
+    """Draw a thick polyline with perfectly round caps and joins."""
+    r = width / 2.0
+    for x, y in pts:
+        draw.ellipse([x - r, y - r, x + r, y + r], fill=color)
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:], strict=False):
+        dx = x2 - x1
+        dy = y2 - y1
+        length = math.hypot(dx, dy)
+        if length == 0:
+            continue
+        nx = -dy / length * r
+        ny = dx / length * r
+        draw.polygon(
+            [
+                (x1 + nx, y1 + ny),
+                (x2 + nx, y2 + ny),
+                (x2 - nx, y2 - ny),
+                (x1 - nx, y1 - ny),
+            ],
+            fill=color,
+        )
+
+
+def _draw_bluetooth_rune(
+    draw: ImageDraw.ImageDraw,
+    cx: float,
+    cy: float,
+    half_h: float,
+    w_right: float,
+    w_left: float,
+    stroke: float,
+    color: str,
+    s: int,
+) -> None:
+    """Draw a clean geometric Bluetooth rune centered at (cx, cy)."""
+    _draw_thick_polyline(
+        draw,
+        [(cx * s, (cy - half_h) * s), (cx * s, (cy + half_h) * s)],
+        stroke * s,
+        color,
+    )
+    _draw_thick_polyline(
+        draw,
+        [
+            (cx * s, (cy - half_h) * s),
+            ((cx + w_right) * s, (cy - half_h * 0.5) * s),
+            ((cx - w_left) * s, (cy + half_h * 0.5) * s),
+        ],
+        stroke * s,
+        color,
+    )
+    _draw_thick_polyline(
+        draw,
+        [
+            (cx * s, (cy + half_h) * s),
+            ((cx + w_right) * s, (cy + half_h * 0.5) * s),
+            ((cx - w_left) * s, (cy - half_h * 0.5) * s),
+        ],
+        stroke * s,
+        color,
+    )
+
+
 def draw_icon() -> Image.Image:
     """Draw the 512px RGBA app icon."""
     s = SCALE
@@ -60,17 +131,30 @@ def draw_icon() -> Image.Image:
     # 1. Dark navy rounded square background.
     d.rounded_rectangle(box(0, 0, SIZE - 1, SIZE - 1), radius=104 * s, fill=NAVY)
 
-    # 2. Centered LED Matrix Sign outer frame (cyan) and dark matrix recess.
-    d.rounded_rectangle(box(44, 118, 468, 394), radius=40 * s, fill=CYAN)
-    d.rounded_rectangle(box(68, 142, 444, 370), radius=24 * s, fill=PANEL_DARK)
+    # 2. Crisp Bluetooth rune badge centered above the LED matrix sign.
+    _draw_bluetooth_rune(
+        d,
+        cx=256.0,
+        cy=82.0,
+        half_h=38.0,
+        w_right=26.0,
+        w_left=24.0,
+        stroke=11.0,
+        color=CYAN,
+        s=s,
+    )
 
-    # 3. Centered 11x5 LED dot matrix inside the dark panel.
+    # 3. Centered LED Matrix Sign outer frame (cyan) and dark matrix recess.
+    d.rounded_rectangle(box(44, 148, 468, 424), radius=40 * s, fill=CYAN)
+    d.rounded_rectangle(box(68, 172, 444, 400), radius=24 * s, fill=PANEL_DARK)
+
+    # 4. Centered 11x5 LED dot matrix inside the dark panel.
     cols = 11
     rows = 5
     pitch_x = 30.8
     pitch_y = 35.0
     start_x = 256.0 - (cols - 1) * pitch_x / 2.0
-    start_y = 256.0 - (rows - 1) * pitch_y / 2.0
+    start_y = 286.0 - (rows - 1) * pitch_y / 2.0
     dot_r = 11.6
 
     for r_idx, row_str in enumerate(LED_BITMAP):
