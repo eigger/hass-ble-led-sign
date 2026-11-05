@@ -1,13 +1,13 @@
 <!-- hass-standards:header:start -->
-# BLE LED Sign
+# BLE LED Sign for Home Assistant
 
-BLE LED Sign is a unified Home Assistant integration for controlling Bluetooth Low Energy (BLE) matrix LED displays (CoolLED, iLed, iPixel Color). Automate scrolling text, static messages, graphics, and dynamic layouts from Home Assistant instead of vendor mobile apps.
+A Home Assistant custom integration that controls CoolLED, iLed and iPixel Color Bluetooth matrix LED displays, automating scrolling text, static messages, graphics and dynamic layouts.
 
 **English** | [한국어](README.ko.md)
 
 <!-- hass-standards:badges:start -->
 [![Release](https://img.shields.io/github/v/release/eigger/hass-ble-led-sign?style=flat)](https://github.com/eigger/hass-ble-led-sign/releases)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat)](#installation)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5?style=flat)](#installation)
 [![Home Assistant minimum](https://img.shields.io/badge/HA-%E2%89%A5%202025.1.0-41BDF5?style=flat)](hacs.json)
 [![Tests](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/tests.yml?branch=master&style=flat&label=Tests)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/tests.yml)
 [![Validate](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/validate.yml?branch=master&style=flat&label=Validate)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/validate.yml)
@@ -37,17 +37,17 @@ Full hardware details and color capabilities are documented in the [User Guide](
 ## Installation
 
 <!-- hass-standards:installation:start -->
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign)
 <!-- hass-standards:installation:end -->
 
-### Via HACS (Recommended)
+### Marketplace or HACS
 
-1. Open HACS in Home Assistant and select **Integrations**.
-2. Click the top-right menu and choose **Custom repositories**.
-3. Add repository URL `https://github.com/eigger/hass-ble-led-sign` with category **Integration**.
-4. Search for **BLE LED Sign**, click **Download**, and restart Home Assistant.
+1. On Home Assistant 2026.11 or later, open **Settings → Marketplace** and search for **BLE LED Sign**. On earlier supported versions, search in the default HACS integration catalog. The button above opens the repository in the appropriate store.
+2. Download **BLE LED Sign**. Restart Home Assistant if prompted.
 
-### Manual Installation
+If it does not appear in the catalog, add `https://github.com/eigger/hass-ble-led-sign` as a custom integration repository; Marketplace requires a GitHub connection for custom repositories.
+
+### Manual installation
 
 1. Copy the `custom_components/ble_led_sign` folder from this repository into your Home Assistant `<config_dir>/custom_components/` directory.
 2. Restart Home Assistant.
@@ -99,15 +99,6 @@ For more examples, animations, and image rendering syntax, refer to the [User Gu
 - [Troubleshooting](docs/troubleshooting.md): Connection debugging, proxy setup, and diagnostic entities.
 - [Development & Testing](docs/development.md): Development environment setup, test suite execution, and standards compliance.
 - [Shared Bluetooth Proxy Guide](https://github.com/eigger/blesession/blob/main/docs/bluetooth.md): Recommended ESPHome proxy hardware and configurations.
-
-## Support
-
-- Report bugs or unexpected behavior via [GitHub Issues](https://github.com/eigger/hass-ble-led-sign/issues).
-- Questions and feature discussions are welcome on [GitHub Discussions](https://github.com/eigger/hass-ble-led-sign/discussions).
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
 
 - [Payload action examples](docs/payload.md): Runnable layouts and device output settings.
 

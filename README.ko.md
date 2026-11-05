@@ -1,13 +1,13 @@
 <!-- hass-standards:header:start -->
-# BLE LED Sign
+# BLE LED Sign for Home Assistant
 
-BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, iLed, iPixel Color 등)을 제어하기 위한 Home Assistant 통합구성요소입니다. 제조사 전용 스마트폰 앱 대신 Home Assistant에서 직접 스크롤 텍스트, 상태 메시지, 그래픽 및 동적 레이아웃을 자동화할 수 있습니다.
+CoolLED, iLed, iPixel Color Bluetooth 매트릭스 LED 전광판의 스크롤 텍스트·상태 메시지·그래픽·동적 레이아웃을 자동화하는 Home Assistant 커스텀 통합입니다.
 
 [English](README.md) | **한국어**
 
 <!-- hass-standards:badges:start -->
 [![Release](https://img.shields.io/github/v/release/eigger/hass-ble-led-sign?style=flat)](https://github.com/eigger/hass-ble-led-sign/releases)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat)](#설치)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5?style=flat)](#설치)
 [![Home Assistant minimum](https://img.shields.io/badge/HA-%E2%89%A5%202025.1.0-41BDF5?style=flat)](hacs.json)
 [![Tests](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/tests.yml?branch=master&style=flat&label=Tests)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/tests.yml)
 [![Validate](https://img.shields.io/github/actions/workflow/status/eigger/hass-ble-led-sign/validate.yml?branch=master&style=flat&label=Validate)](https://github.com/eigger/hass-ble-led-sign/actions/workflows/validate.yml)
@@ -37,15 +37,15 @@ BLE LED Sign은 블루투스 저전력(BLE) 매트릭스 LED 전광판(CoolLED, 
 ## 설치
 
 <!-- hass-standards:installation:start -->
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eigger&repository=hass-ble-led-sign)
 <!-- hass-standards:installation:end -->
 
-### HACS를 통한 설치 (권장)
+### 마켓플레이스 또는 HACS
 
-1. Home Assistant에서 HACS 메뉴로 이동한 후 **통합구성요소**를 선택합니다.
-2. 우측 상단 메뉴에서 **사용자 지정 저장소**를 클릭합니다.
-3. 저장소 URL `https://github.com/eigger/hass-ble-led-sign`을 입력하고 범주로 **통합구성요소**를 선택하여 추가합니다.
-4. **BLE LED Sign**을 검색하여 **다운로드**한 후 Home Assistant를 다시 시작합니다.
+1. Home Assistant 2026.11 이상에서는 **설정 → 마켓플레이스**에서 **BLE LED Sign**을 검색합니다. 이전 지원 버전에서는 HACS 기본 통합 카탈로그에서 검색합니다. 위 버튼은 버전에 맞는 스토어의 저장소 화면을 엽니다.
+2. **BLE LED Sign**을 다운로드합니다. 안내가 표시되면 Home Assistant를 재시작합니다.
+
+카탈로그에서 찾을 수 없다면 `https://github.com/eigger/hass-ble-led-sign`을 사용자 지정 통합 저장소로 추가합니다. 마켓플레이스의 사용자 지정 저장소에는 GitHub 연결이 필요합니다.
 
 ### 수동 설치
 
@@ -99,15 +99,6 @@ data:
 - [문제 해결](docs/troubleshooting.ko.md): 연결 문제 진단, 프록시 설정 점검 및 진단 엔티티 활용법.
 - [개발 및 테스트](docs/development.md): 개발 환경 구성, 테스트 실행 및 저장소 표준 안내.
 - [블루투스 프록시 가이드](https://github.com/eigger/blesession/blob/main/docs/bluetooth.ko.md): 권장 ESPHome 프록시 하드웨어 및 설정 방법.
-
-## 지원
-
-- 버그 제보나 문제 발생 시 [GitHub Issues](https://github.com/eigger/hass-ble-led-sign/issues)를 이용해 주세요.
-- 사용 질문이나 기능 제안은 [GitHub Discussions](https://github.com/eigger/hass-ble-led-sign/discussions)를 이용해 주세요.
-
-## 라이선스
-
-이 프로젝트는 [MIT License](LICENSE)에 따라 제공됩니다.
 
 - [Payload 작업 예제](docs/payload.ko.md): 실행 가능한 레이아웃과 기기 출력 설정.
 
