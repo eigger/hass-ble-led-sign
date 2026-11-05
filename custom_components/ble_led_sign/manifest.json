@@ -1,64 +1,44 @@
 {
-  "domain": "ble_led_sign",
-  "name": "BLE LED Sign",
-  "after_dependencies": [
-    "recorder"
-  ],
-  "bluetooth": [
-    {
-      "connectable": true,
-      "local_name": "CoolLED*",
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "local_name": "CoolLEDX*",
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "local_name": "CoolLEDM*",
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "local_name": "CoolLEDU*",
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "local_name": "iLed*",
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "local_name": "LED_BLE*"
-    },
-    {
-      "connectable": true,
-      "service_uuid": "0000ae00-0000-1000-8000-00805f9b34fb"
-    },
-    {
-      "connectable": true,
-      "service_uuid": "000000fa-0000-1000-8000-00805f9b34fb"
-    }
-  ],
-  "categories": [
-    "media_entertainment"
-  ],
-  "codeowners": [
-    "@eigger"
-  ],
-  "config_flow": true,
-  "dependencies": [
-    "bluetooth_adapters"
-  ],
-  "documentation": "https://github.com/eigger/hass-ble-led-sign",
-  "iot_class": "local_push",
-  "issue_tracker": "https://github.com/eigger/hass-ble-led-sign/issues",
-  "requirements": [
-    "blesession>=0.9.1",
-    "imagespec[datamatrix]>=1.1.1"
-  ],
-  "version": "2.4.2"
+    "domain": "ble_led_sign",
+    "name": "BLE LED Sign",
+    "after_dependencies": ["recorder"],
+    "bluetooth": [
+        {
+            "connectable": true,
+            "local_name": "CoolLED*",
+            "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "connectable": true,
+            "local_name": "CoolLEDX*",
+            "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "connectable": true,
+            "local_name": "CoolLEDM*",
+            "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "connectable": true,
+            "local_name": "CoolLEDU*",
+            "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "connectable": true,
+            "local_name": "iLed*",
+            "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        },
+        {"connectable": true, "local_name": "LED_BLE*"},
+        {"connectable": true, "service_uuid": "0000ae00-0000-1000-8000-00805f9b34fb"},
+        {"connectable": true, "service_uuid": "000000fa-0000-1000-8000-00805f9b34fb"},
+    ],
+    "categories": ["media_entertainment"],
+    "codeowners": ["@eigger"],
+    "config_flow": true,
+    "dependencies": ["bluetooth_adapters"],
+    "documentation": "https://github.com/eigger/hass-ble-led-sign",
+    "iot_class": "local_push",
+    "issue_tracker": "https://github.com/eigger/hass-ble-led-sign/issues",
+    "requirements": ["blesession\u003e=0.9.1", "imagespec[datamatrix]\u003e=1.1.1"],
+    "version": "2.4.3",
 }
