@@ -57,8 +57,8 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/eigger/hass-ble-led-sign/issues",
   "requirements": [
-    "blesession>=0.9.1",
-    "imagespec[datamatrix]>=1.1.1"
+    "blesession>=0.10.0",
+    "imagespec[datamatrix]>=1.2.0"
   ],
   "version": "2.4.3"
 }
