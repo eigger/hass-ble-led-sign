@@ -58,7 +58,7 @@
   "issue_tracker": "https://github.com/eigger/hass-ble-led-sign/issues",
   "requirements": [
     "blesession>=0.10.0",
-    "imagespec[datamatrix]>=1.2.0"
+    "imagespec[datamatrix]>=1.2.1"
   ],
   "version": "2.4.4"
 }
